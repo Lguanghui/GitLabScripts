@@ -1,5 +1,11 @@
 <component name="CopyrightManager">
   <settings default="Apache">
+    <LanguageOptions name="Shell Script">
+      <option name="fileTypeOverride" value="3" />
+      <option name="separateBefore" value="true" />
+      <option name="lenBefore" value="1" />
+      <option name="filler" value="!/bin/bash" />
+    </LanguageOptions>
     <LanguageOptions name="__TEMPLATE__" />
   </settings>
 </component>

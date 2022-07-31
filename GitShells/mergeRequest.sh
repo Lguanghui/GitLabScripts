@@ -1,3 +1,4 @@
+#!/bin/bash
 #
 # Copyright (c) 2022, Guanghui Liang. All Rights Reserved.
 #
@@ -14,4 +15,50 @@
 # limitations under the License.
 #
 
-echo "Welcome!"
+source $(dirname "$(dirname "$0")")/CommonEcho.sh
+source $(dirname "$(dirname "$0")")/Time.sh
+
+timestamp=$(currentTimeStamp)
+username=$(whoami)
+
+echo
+echo "Creating New Merge Request"
+echo
+
+if [[ `git status --porcelain` ]]; then
+#  has uncommitted Changes
+  echoRed "\033[31mFound Uncommitted Changes\033[0m"
+  echoRed "\033[31mQuit\033[0m"
+  exit 1
+else
+  echo -n "Input Target Remote Branch (Default master): "
+  read inputBranch
+  if [ -z "$inputBranch" ]; then
+      inputBranch="master"
+  fi
+
+  echo
+  echoBlue "Operating Branches"
+
+# source branch
+  sourceBranch=$(git branch | sed -n -e 's/^\* \(.*\)/\1/p')
+  echoBlue "Source Branch is $sourceBranch"
+
+# creat cache branch
+  echoBlue "Creating And Switching to Cache Branch"
+  git checkout -b "$username/mr$timestamp" > /dev/null 2>&1
+
+#  push
+  echoBlue "Pushing To Remote"
+  git push -o merge_request.create -o merge_request.target=$inputBranch --set-upstream origin "$username/mr$timestamp"
+
+# switch to source branch
+  echoBlue "Switching to Source Branch"
+  git checkout "$sourceBranch"
+
+# delete cache branch
+  echoBlue "Deleting Cache Branch"
+  git branch -d "$username/mr$timestamp"
+
+  echoGreen "Merge Request Successfully Created"
+fi
