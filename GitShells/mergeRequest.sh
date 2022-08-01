@@ -31,6 +31,7 @@ if [[ `git status --porcelain` ]]; then
   echoRed "\033[31mQuit\033[0m"
   exit 1
 else
+#  read target remote branch
   echo -n "Input Target Remote Branch (Default master): "
   read inputBranch
   if [ -z "$inputBranch" ]; then
@@ -54,11 +55,11 @@ else
 
 # switch to source branch
   echoBlue "Switching to Source Branch"
-  git checkout "$sourceBranch"
+  git checkout "$sourceBranch" > /dev/null 2>&1
 
 # delete cache branch
   echoBlue "Deleting Cache Branch"
-  git branch -d "$username/mr$timestamp"
+  git branch -d "$username/mr$timestamp" > /dev/null 2>&1
 
-  echoGreen "Merge Request Successfully Created"
+  echoGreen "Merge Request Successfully Created. See Messages Above"
 fi
