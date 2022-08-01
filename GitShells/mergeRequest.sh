@@ -22,7 +22,7 @@ timestamp=$(currentTimeStamp)
 username=$(whoami)
 
 echo
-echo "Creating New Merge Request"
+echo "Start Creating New Merge Request"
 echo
 
 if [[ `git status --porcelain` ]]; then
@@ -45,11 +45,11 @@ else
   echoBlue "Source Branch is $sourceBranch"
 
 # creat cache branch
-  echoBlue "Creating And Switching to Cache Branch"
+  echoBlue "Creating and Switching to Cache Branch"
   git checkout -b "$username/mr$timestamp" > /dev/null 2>&1
 
 #  push
-  echoBlue "Pushing To Remote"
+  echoBlue "Pushing to Remote"
   git push -o merge_request.create -o merge_request.target=$inputBranch --set-upstream origin "$username/mr$timestamp"
 
 # switch to source branch
