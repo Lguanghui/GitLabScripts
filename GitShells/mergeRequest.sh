@@ -46,7 +46,7 @@ else
   echoBlue "Source Branch is $sourceBranch"
 
 # creat cache branch
-  echoBlue "Creating and Switching to Cache Branch"
+  echoBlue "Creating and Switching to the Cache Branch"
   git checkout -b "$username/mr$timestamp" > /dev/null 2>&1
 
 #  push
@@ -61,5 +61,5 @@ else
   echoBlue "Deleting Cache Branch"
   git branch -d "$username/mr$timestamp" > /dev/null 2>&1
 
-  echoGreen "Merge Request Successfully Created. See Messages Above"
+  echoGreen "Merge Request Successfully Created. See Messages Above."
 fi
