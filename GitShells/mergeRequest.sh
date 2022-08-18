@@ -30,11 +30,21 @@ if [[ `git status --porcelain` ]]; then
   exit 1
 else
 
+#  get latest commit message
+  latestMessage=$(git log -1 HEAD --pretty=format:%s)
+
 #  read target remote branch
   echoOrange "Input Target Remote Branch (Default master): "
   read -r inputBranch
   if [ -z "$inputBranch" ]; then
       inputBranch="master"
+  fi
+
+#  read request title
+  echoOrange "Input Merge Request Title (Default is the Latest Commit Message): "
+  read -r mergeRequestTitle
+  if [ -z "$mergeRequestTitle" ]; then
+      mergeRequestTitle="$latestMessage"
   fi
 
   echoBlue "Operating Branches"
@@ -50,7 +60,12 @@ else
 #  push
   echoBlue "Pushing to Remote"
   merge_request=""
-  git push -o merge_request.create -o merge_request.target=$inputBranch --set-upstream origin "$username/mr$timestamp" > mrLog.txt 2>&1
+  git push \
+    -o merge_request.create \
+    -o merge_request.target=$inputBranch \
+    -o merge_request.title="$mergeRequestTitle" \
+    --set-upstream origin "$username/mr$timestamp" \
+    > mrLog.txt 2>&1
 
 # find merge request from output
   target="remote:   http"
@@ -60,6 +75,9 @@ else
       merge_request=$line
     fi
   done < mrLog.txt
+
+# delete log file
+  rm -rf mrLog.txt
 
 # switch to source branch
   echoBlue "Switching to Source Branch"
@@ -78,6 +96,4 @@ else
     echo "${merge_request/#remote:/   }"
   fi
 
-# delete log file
-  rm -rf mrLog.txt
 fi
