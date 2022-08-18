@@ -80,19 +80,19 @@ else
   rm -rf mrLog.txt
 
 # switch to source branch
-  echoBlue "Switching to Source Branch"
+  echoBlue "Switching to the Source Branch"
   git checkout "$sourceBranch" > /dev/null 2>&1
 
 # delete cache branch
-  echoBlue "Deleting Cache Branch"
+  echoBlue "Deleting the Cache Branch"
   git branch -d "$username/mr$timestamp" > /dev/null 2>&1
 
 # output
-  echoGreen "Merge Request Successfully Created:"
-  echoGreen "View Merge Request:"
   if [ -z "$merge_request" ]; then
-    echoRed "Error! No Merge Request found!"
+    echoRed "Error! Merge Request Created Successfully. But No Merge Request Found!"
   else
+    echoGreen "Merge Request Created Successfully!"
+    echoGreen "View Merge Request:"
     echo "${merge_request/#remote:/   }"
   fi
 
