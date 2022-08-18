@@ -21,9 +21,7 @@ source $(dirname "$(dirname "$0")")/Time.sh
 timestamp=$(currentTimeStamp)
 username=$(whoami)
 
-echo
-echo "Start Creating New Merge Request"
-echo
+echoOrange "Start Creating New Merge Request"
 
 if [[ `git status --porcelain` ]]; then
 #  has uncommitted Changes
@@ -31,14 +29,14 @@ if [[ `git status --porcelain` ]]; then
   echoRed "\033[31mQuit\033[0m"
   exit 1
 else
+
 #  read target remote branch
-  echo -n "Input Target Remote Branch (Default master): "
-  read inputBranch
+  echoOrange "Input Target Remote Branch (Default master): "
+  read -r inputBranch
   if [ -z "$inputBranch" ]; then
       inputBranch="master"
   fi
 
-  echo
   echoBlue "Operating Branches"
 
 # source branch
@@ -51,7 +49,17 @@ else
 
 #  push
   echoBlue "Pushing to Remote"
-  git push -o merge_request.create -o merge_request.target=$inputBranch --set-upstream origin "$username/mr$timestamp"
+  merge_request=""
+  git push -o merge_request.create -o merge_request.target=$inputBranch --set-upstream origin "$username/mr$timestamp" > mrLog.txt 2>&1
+
+# find merge request from output
+  target="remote:   http"
+  while read -r line
+  do
+    if [[ $line =~ $target ]]; then
+      merge_request=$line
+    fi
+  done < mrLog.txt
 
 # switch to source branch
   echoBlue "Switching to Source Branch"
@@ -61,5 +69,15 @@ else
   echoBlue "Deleting Cache Branch"
   git branch -d "$username/mr$timestamp" > /dev/null 2>&1
 
-  echoGreen "Merge Request Successfully Created. See Messages Above."
+# output
+  echoGreen "Merge Request Successfully Created:"
+  echoGreen "View Merge Request:"
+  if [ -z "$merge_request" ]; then
+    echoRed "Error! No Merge Request found!"
+  else
+    echo "${merge_request/#remote:/   }"
+  fi
+
+# delete log file
+  rm -rf mrLog.txt
 fi

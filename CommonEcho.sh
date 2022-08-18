@@ -41,3 +41,10 @@ echoYellow() {
   fi
   echo -e "🟡 $1"
 }
+
+echoOrange() {
+  if [ -z "$1" ]; then
+        return
+  fi
+  echo -e "🟠 $1"
+}
