@@ -15,8 +15,41 @@
 # limitations under the License.
 #
 
-gitShellsPath=$(dirname "$0")
-shellsPath=$(dirname "$gitShellsPath")
+POSITIONAL_ARGS=()
+# path of this ShellScript project
+projpath=""
+inputBranch=""
+
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    -p|--projpath)
+      projpath="$2"
+      shift # past argument
+      shift # past value
+      ;;
+    -b|--targetBranch)
+      inputBranch="$2"
+      shift
+      shift
+    ;;
+    -*)
+      echo "Unknown option $1"
+      exit 1
+      ;;
+    *)
+      POSITIONAL_ARGS+=("$1") # save positional arg
+      shift # past argument
+      ;;
+  esac
+done
+
+if [ -z "$projpath" ]; then
+  gitShellsPath=$(dirname "$0")
+  shellsPath=$(dirname "$gitShellsPath")
+else
+  shellsPath="$projpath"
+fi
+
 source "$shellsPath"/CommonEcho.sh
 source "$shellsPath"/Time.sh
 
