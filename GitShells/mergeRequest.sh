@@ -15,8 +15,10 @@
 # limitations under the License.
 #
 
-source $(dirname "$(dirname "$0")")/CommonEcho.sh
-source $(dirname "$(dirname "$0")")/Time.sh
+gitShellsPath=$(dirname "$0")
+shellsPath=$(dirname "$gitShellsPath")
+source "$shellsPath"/CommonEcho.sh
+source "$shellsPath"/Time.sh
 
 timestamp=$(currentTimeStamp)
 username=$(whoami)
@@ -25,13 +27,13 @@ echoOrange "Start Creating New Merge Request"
 
 if [[ `git status --porcelain` ]]; then
 #  has uncommitted Changes
-  echoRed "\033[31mFound Uncommitted Changes\033[0m"
+  echoRed "\033[31mFind Uncommitted Changes\033[0m"
   echoRed "\033[31mQuit\033[0m"
   exit 1
 else
 
 #  get latest commit message
-  latestMessage=$(git log -1 HEAD --pretty=format:%s)
+  latestMessage="$(git log -1 HEAD --pretty=format:%s)"
 
 #  read target remote branch
   echoOrange "Input Target Remote Branch (Default master): "
