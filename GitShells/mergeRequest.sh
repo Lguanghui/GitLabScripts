@@ -15,10 +15,17 @@
 # limitations under the License.
 #
 
+# arguments from command line
+# ******************************************
+# used for unknown args
 POSITIONAL_ARGS=()
 # path of this ShellScript project
 projpath=""
-inputBranch=""
+# target branch of this new merge request
+targetBranch=""
+# title of this new merge request
+commitMessage=""
+# *****************************************
 
 while [[ $# -gt 0 ]]; do
   case $1 in
@@ -28,7 +35,12 @@ while [[ $# -gt 0 ]]; do
       shift # past value
       ;;
     -b|--targetBranch)
-      inputBranch="$2"
+      targetBranch="$2"
+      shift
+      shift
+    ;;
+    -m|--commitMessage)
+      commitMessage="$2"
       shift
       shift
     ;;
@@ -59,20 +71,31 @@ username=$(whoami)
 echoOrange "Start Creating New Merge Request"
 
 if [[ `git status --porcelain` ]]; then
-#  has uncommitted Changes
+#  find uncommitted Changes
   echoRed "\033[31mFind Uncommitted Changes\033[0m"
   echoRed "\033[31mQuit\033[0m"
   exit 1
 else
 
-#  get latest commit message
-  latestMessage="$(git log -1 HEAD --pretty=format:%s)"
+  # set merge request title
+  if [ -z "$commitMessage" ]; then
+    # get latest commit message
+    latestMessage="$(git log -1 HEAD --pretty=format:%s)"
+  else
+    latestMessage="$commitMessage"
+  fi
 
-#  read target remote branch
-  echoOrange "Input Target Remote Branch (Default master): "
-  read -r inputBranch
-  if [ -z "$inputBranch" ]; then
-      inputBranch="master"
+
+  if [ -z "$targetBranch" ]; then
+  # read target remote branch
+    echoOrange "Input Target Remote Branch (Default master): "
+    read -r inputBranch
+    if [ -z "$inputBranch" ]; then
+        inputBranch="master"
+    fi
+  else
+  # get targetBranch from args
+    inputBranch="${targetBranch/#refs\/remotes\/origin\//}"   # drop prefix
   fi
 
 #  read request title
