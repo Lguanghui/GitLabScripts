@@ -22,8 +22,9 @@ import re
 import gitlab
 import difflib
 import git
-import os
+import os, sys
 import getpass
+import getopt
 
 PODFILE = 'Podfile'
 PY_FILE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -183,5 +184,19 @@ class MRHelper:
 
 
 if __name__ == '__main__':
+    # 创建配置文件
+    opts, args = getopt.getopt(sys.argv, "", ["--init"])
+    if '--init' in args:
+        f = open('MRConfig.ini', 'a')
+        f.write("""
+[Keep]
+url = https://gitlab.gotokeep.com
+private_token = *****
+api_version = 4
+        """.strip())
+        f.close()
+        raise SystemExit('配置文件创建成功')
+
+    # 创建 merge request
     helper = MRHelper()
     helper.create_merge_request()
