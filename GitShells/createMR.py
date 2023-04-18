@@ -29,14 +29,19 @@ import git
 import gitlab
 
 PODFILE = 'Podfile'
-PY_FILE_DIR = os.path.dirname(os.path.abspath(__file__))
-
 COMMIT_CONFIRM_PROMPT = '''
 请确认将要用于生成 merge request 的提交:
     message: {message}
     author: {author}
     authored_date: {authored_date}
 '''
+
+
+def get_root_path() -> str:
+    if getattr(sys, 'frozen', False):
+        return os.path.dirname(sys.executable)
+    elif __file__:
+        return os.path.dirname(__file__)
 
 
 def make_question(prompt: str, expect_answers: [str] = None):
@@ -93,7 +98,7 @@ class CommitHelper:
 
 class MRHelper:
     def __init__(self):
-        self.gitlab = gitlab.Gitlab.from_config('Keep', [PY_FILE_DIR + '/MRConfig.ini'])
+        self.gitlab = gitlab.Gitlab.from_config('Keep', [get_root_path() + '/MRConfig.ini'])
         self.repo = git.Repo(os.getcwd(), search_parent_directories=True)
         self.current_proj = self.get_gitlab_project(self.get_repo_name(self.repo))
         self.last_commit = CommitHelper.get_last_commit(self.repo)
@@ -133,11 +138,11 @@ class MRHelper:
             raise SystemExit('⚠️有未提交的更改！')
         else:
             # 确认用于生成 MR 的提交
-            print_step(COMMIT_CONFIRM_PROMPT
-                       .format(message=self.last_commit.message.strip(),
-                               author=self.last_commit.author,
-                               authored_date=self.get_formatted_time(self.last_commit.authored_date))
-                       .rstrip())
+            print(COMMIT_CONFIRM_PROMPT
+                  .format(message=self.last_commit.message.strip(),
+                          author=self.last_commit.author,
+                          authored_date=self.get_formatted_time(self.last_commit.authored_date))
+                  .rstrip())
             commit_confirm = make_question('请输入 y(回车)/n: ', ['y', 'n'])
             if commit_confirm == 'n':
                 raise SystemExit('取消生成 merge request')
@@ -195,22 +200,29 @@ class MRHelper:
             # self.repo.git.push('origin', source_branch)
             # 生成 MR
             description_arg = f'-o merge_request.description=\"{description}\"' if len(description) > 0 else ''
-            cmd = f"git push -o merge_request.create -o merge_request.target={mr_target_br} -o merge_request.title=\"{mr_title}\" {description_arg} --set-upstream origin {source_branch} "
+            cmd = f"git push " \
+                  f"-o merge_request.create " \
+                  f"-o merge_request.target={mr_target_br} " \
+                  f"-o merge_request.title=\"{mr_title}\" " \
+                  f"--set-upstream origin {source_branch} "
 
-            os.system(f'{cmd} > /dev/null 2>&1')
+            os.system(f'{cmd} >/dev/null 2>&1')
+            time.sleep(1)   # 等待
             merge_request_url = ''
             mr_list = self.current_proj.mergerequests.list(state='opened', order_by='updated_at')
             for mr in mr_list:
                 commit_list = [commit.id for commit in mr.commits()]
                 if self.last_commit.hexsha in commit_list:
                     merge_request_url = mr.web_url
+                    mr.description = description
+                    print(description)
 
             print_step(f'删除本地分支 {source_branch}，并切换到原分支 {original_source_branch}')
             self.repo.git.checkout(original_source_branch)
             self.repo.delete_head(source_branch)
 
             if len(merge_request_url) > 0:
-                print_step(f'merge request 创建成功，链接: {merge_request_url}')
+                print_step(f'merge request 创建成功，链接: \n    {merge_request_url}')
             else:
                 raise SystemExit('merge request 创建失败！')
 
