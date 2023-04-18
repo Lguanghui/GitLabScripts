@@ -1,5 +1,39 @@
 # ShellScripts
 
+## createMR
+
+### 初始化配置
+
+#### 方式一：通过可执行文件运行
+
+将 GitShells/dist/createMR 可执行文件下载放置到某个路径下（自定义）。
+
+终端执行：
+
+```shell
+createMR --init
+```
+
+#### 方式二：直接运行脚本
+
+```shell
+python createMR.py --init
+```
+
+上面两种方式都会在当前目录下生成一个 `MRConfig.ini` 文件。**需要将配置文件中的 token 替换为自己在 gitlab 生成的 token**。
+
+![token](images/gitlab_token.png)
+
+### 生成 merge request
+
+和生成配置类似，生成 merge request 也有相应的两种方式，只不过需要把 `--init` 参数去掉
+
+样图：
+
+![mr](create_mr_screen_shot.png)
+
+脚本流程与下面的 mergeRequest.sh 相似。
+
 ## mergeRequest
 
 ### 使用方法
