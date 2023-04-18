@@ -184,11 +184,11 @@ class MRHelper:
 
             description = ''
             if len(relative_pod_mrs) > 0:
-                description += '\n' + "相关组件库提交:"
+                description += "<p>相关组件库提交:</p>"
             for relative_url in relative_pod_mrs:
-                description += '\n' + '    👉: ' + relative_url
+                description += "<p>" + "    👉: " + relative_url + "</p>"
             if len(description):
-                print_step('自动填写 description: ', description)
+                print_step('自动填写 description: ', str(description.replace('<p>', '\n').replace('</p>', '\n')))
 
             source_branch = self.repo.head.ref.name
             original_source_branch = source_branch
