@@ -30,7 +30,7 @@ python createMR.py --init
 
 样图：
 
-![mr](create_mr_screen_shot.png)
+![mr_example](images/create_mr_screen_shot.png)
 
 脚本流程与下面的 mergeRequest.sh 相似。
 
