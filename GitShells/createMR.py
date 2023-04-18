@@ -184,9 +184,11 @@ class MRHelper:
 
             description = ''
             if len(relative_pod_mrs) > 0:
-                description += '\n' + "相关组件库提交："
+                description += '\n' + "相关组件库提交:"
             for relative_url in relative_pod_mrs:
                 description += '\n' + '    👉: ' + relative_url
+            if len(description):
+                print_step('自动填写 description: ', description)
 
             source_branch = self.repo.head.ref.name
             original_source_branch = source_branch
@@ -219,6 +221,7 @@ class MRHelper:
                 if self.last_commit.hexsha in commit_list:
                     merge_request_url = mr.web_url
                     mr.description = description
+                    mr.save()
 
             print_step(f'删除本地分支 {source_branch}，并切换到原分支 {original_source_branch}')
             self.repo.git.checkout(original_source_branch)
