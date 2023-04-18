@@ -8,6 +8,10 @@
 
 将 GitShells/dist/createMR 可执行文件下载放置到某个路径下（自定义）。
 
+> 建议将可执行文件所在文件夹添加到终端配置中（例如 .zshrc）：
+> 
+> `export PATH="$PATH:/Users/liangguanghui/IdeaProjects/ShellScripts/GitShells/dist"`
+
 终端执行：
 
 ```shell
@@ -15,6 +19,10 @@ createMR --init
 ```
 
 #### 方式二：直接运行脚本
+
+> 建议将 createMR.py 所在文件夹添加到终端配置中（例如 .zshrc）：
+> 
+> `export PATH="$PATH:/Users/liangguanghui/IdeaProjects/ShellScripts/GitShells"`
 
 ```shell
 python createMR.py --init
