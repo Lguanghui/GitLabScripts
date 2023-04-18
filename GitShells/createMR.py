@@ -128,6 +128,9 @@ class MRHelper:
         return time.strftime('%a, %d %b %Y %H:%M', time.gmtime(seconds))
 
     def get_gitlab_project(self, keyword: str):
+        for proj in self.gitlab.projects.list(get_all=True):
+            if proj.name == keyword:
+                return proj
         return self.gitlab.projects.list(search=keyword, get_all=True)[0]
 
     def check_has_uncommitted_changes(self) -> bool:
@@ -215,7 +218,6 @@ class MRHelper:
                 if self.last_commit.hexsha in commit_list:
                     merge_request_url = mr.web_url
                     mr.description = description
-                    print(description)
 
             print_step(f'删除本地分支 {source_branch}，并切换到原分支 {original_source_branch}')
             self.repo.git.checkout(original_source_branch)
