@@ -1,3 +1,4 @@
 .DS_Store
 /GitShells/build
 /GitShells/createMR.spec
+/GitShells/dist/MRConfig.ini
