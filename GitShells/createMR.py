@@ -25,7 +25,6 @@ import os
 import re
 import sys
 import time
-from typing import Any
 import git
 import gitlab
 
@@ -59,7 +58,7 @@ def make_question(prompt: str, expect_answers: [str] = None):
 
 
 def print_step(*values, sep=' ', end='\n', file=None):
-    _values = ('❖', ' ') + values
+    _values = ('❖',) + values
     print(*_values, sep=sep, end=end, file=file)
 
 
@@ -77,7 +76,7 @@ class CommitHelper:
         for path in relative_paths:
             blob = commit.tree[path].data_stream.read().decode()
             parent_blob = commit.parents[0].tree[path].data_stream.read().decode()
-            diff = difflib.unified_diff(blob.splitlines(), parent_blob.splitlines(), lineterm='', n=0)
+            diff = difflib.unified_diff(parent_blob.splitlines(), blob.splitlines(), lineterm='', n=0)
             for line in diff:
                 if line.startswith('+'):
                     _changed_lines.append(line)
@@ -157,16 +156,21 @@ class MRHelper:
                 mr_title = self.last_commit.message.split('\n')[0]
 
             # 获取关联 MR
-            changed_lines: [str] = CommitHelper.get_changed_lines(CommitHelper.get_last_commit(self.repo), PODFILE)
+            file_changed_lines: [str] = CommitHelper.get_changed_lines(CommitHelper.get_last_commit(self.repo), PODFILE)
             relative_pod_mrs: [str] = []
-            for line in changed_lines:
+            for line in file_changed_lines:
                 line = re.sub('\s+', '', line)  # 去掉空格，方便提取
                 commit_result: [str] = re.findall(r":commit=>\"(.+?)\"", line)
-                url_result: [str] = re.findall(r":git=>\"(.+?)\"", line)
+                url_result: [str] = re.findall(r":git=>\"(.+?)\"", line.replace('\'', '"'))
                 if len(commit_result) and len(url_result):
-                    mr_url = self.get_relative_mr(url_result[0], commit_result[0])
+                    mr_url = helper.get_relative_mr(url_result[0], commit_result[0])
                     if mr_url is not None:
                         relative_pod_mrs.append(mr_url)
+                    else:
+                        # 无法获取对应的 MR 链接，直接获取 commit 的链接
+                        pod_repo_name = url_result[0].split('.git')[0].split('/')[-1]
+                        pod_commit = helper.get_gitlab_project(pod_repo_name).commits.get(commit_result[0])
+                        relative_pod_mrs.append(pod_commit.web_url)
             print_step(f'message: {mr_title}')
 
             description = ''
@@ -205,8 +209,6 @@ class MRHelper:
             self.repo.git.checkout(original_source_branch)
             self.repo.delete_head(source_branch)
 
-            # print(f'merge request 创建成功，URL: {new_mr.web_url}')
-
             if len(merge_request_url) > 0:
                 print_step(f'merge request 创建成功，链接: {merge_request_url}')
             else:
@@ -234,3 +236,12 @@ api_version = 4
     # DEBUG
     # changed_lines = CommitHelper.get_changed_lines(helper.last_commit, PODFILE)
     # print(changed_lines)
+    # relative_pod_mrs: [str] = []
+    # for line in changed_lines:
+    #     line = re.sub('\s+', '', line)  # 去掉空格，方便提取
+    #     commit_result: [str] = re.findall(r":commit=>\"(.+?)\"", line)
+    #     url_result: [str] = re.findall(r":git=>\"(.+?)\"", line.replace('\'', '"'))
+    #     if len(commit_result) and len(url_result):
+    #         repo_name = url_result[0].split('.git')[0].split('/')[-1]
+    #         commit = helper.get_gitlab_project(repo_name).commits.get(commit_result[0])
+    #         print(commit.web_url)
