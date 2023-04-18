@@ -17,14 +17,17 @@ required packages:
     pip3 install python-gitlab
     pip3 install gitpython
 """
-import time
-import re
-import gitlab
+
 import difflib
-import git
-import os, sys
-import getpass
 import getopt
+import getpass
+import os
+import re
+import sys
+import time
+from typing import Any
+import git
+import gitlab
 
 PODFILE = 'Podfile'
 PY_FILE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -55,18 +58,31 @@ def make_question(prompt: str, expect_answers: [str] = None):
                 else (expect_answers[0] if (expect_answers is not None) and len(expect_answers) > 0 else '')
 
 
+def print_step(*values, sep=' ', end='\n', file=None):
+    _values = ('❖', ' ') + values
+    print(*_values, sep=sep, end=end, file=file)
+
+
 class CommitHelper:
     @classmethod
     def get_changed_lines(cls, commit: git.Commit, file: str = PODFILE) -> [str]:
-        changed_lines = []
-        if commit.tree.__contains__(file) and commit.parents[0].tree.__contains__(file):
-            blob = commit.tree[file].data_stream.read().decode()
-            parent_blob = commit.parents[0].tree[file].data_stream.read().decode()
+        _changed_lines = []
+
+        # 找到跟 file 相关的文件，例如 ExamplePod/Podfile
+        relative_paths = []
+        for _diff in commit.diff(commit.parents[0]):
+            if file in _diff.a_blob.path:
+                relative_paths.append(_diff.a_blob.path)
+
+        for path in relative_paths:
+            blob = commit.tree[path].data_stream.read().decode()
+            parent_blob = commit.parents[0].tree[path].data_stream.read().decode()
             diff = difflib.unified_diff(blob.splitlines(), parent_blob.splitlines(), lineterm='', n=0)
             for line in diff:
                 if line.startswith('+'):
-                    changed_lines.append(line)
-        return changed_lines
+                    _changed_lines.append(line)
+
+        return _changed_lines
 
     @classmethod
     def get_last_commit(cls, repo: git.Repo) -> git.Commit:
@@ -118,11 +134,11 @@ class MRHelper:
             raise SystemExit('⚠️有未提交的更改！')
         else:
             # 确认用于生成 MR 的提交
-            print(COMMIT_CONFIRM_PROMPT
-                  .format(message=self.last_commit.message.strip(),
-                          author=self.last_commit.author,
-                          authored_date=self.get_formatted_time(self.last_commit.authored_date))
-                  .rstrip())
+            print_step(COMMIT_CONFIRM_PROMPT
+                       .format(message=self.last_commit.message.strip(),
+                               author=self.last_commit.author,
+                               authored_date=self.get_formatted_time(self.last_commit.authored_date))
+                       .rstrip())
             commit_confirm = make_question('请输入 y(回车)/n: ', ['y', 'n'])
             if commit_confirm == 'n':
                 raise SystemExit('取消生成 merge request')
@@ -133,7 +149,7 @@ class MRHelper:
                 mr_target_br = 'master' \
                     if ('origin/master' in [ref.name for ref in self.repo.remote().refs]) \
                     else 'main'
-            print(f'目标分支: {mr_target_br}')
+            print_step(f'目标分支: {mr_target_br}')
 
             # 输入 MR 标题
             mr_title = make_question('请输入 MR 标题（直接回车会使用上述提交的 message）:')
@@ -151,14 +167,17 @@ class MRHelper:
                     mr_url = self.get_relative_mr(url_result[0], commit_result[0])
                     if mr_url is not None:
                         relative_pod_mrs.append(mr_url)
-            # print(relative_pod_mrs)
+            print_step(f'message: {mr_title}')
+
+            description = ''
+            if len(relative_pod_mrs) > 0:
+                description += '\n' + "相关组件库提交："
             for relative_url in relative_pod_mrs:
-                mr_title += '\n' + '    👉:' + relative_url
-            print(f'message: {mr_title}')
+                description += '\n' + '    👉: ' + relative_url
 
             source_branch = self.repo.head.ref.name
             original_source_branch = source_branch
-            print('当前分支: ', source_branch)
+            print_step('当前分支: ', source_branch)
 
             # 如果当前在主分支，则切换分支
             # if source_branch in ['main', 'master', 'release', 'release_copy']:
@@ -166,28 +185,39 @@ class MRHelper:
             _time = str(int(time.time()))
             source_branch = username + '/mr' + _time
             self.repo.git.checkout('-b', source_branch)
-            print('自动切换到分支: ', source_branch)
+            print_step('自动切换到分支: ', source_branch)
 
-            print(f'将分支 {source_branch} push 到 remote')
-            self.repo.git.push('origin', source_branch)
+            print_step(f'将分支 {source_branch} push 到 remote')
+            # self.repo.git.push('origin', source_branch)
+            # 生成 MR
+            description_arg = f'-o merge_request.description=\"{description}\"' if len(description) > 0 else ''
+            cmd = f"git push -o merge_request.create -o merge_request.target={mr_target_br} -o merge_request.title=\"{mr_title}\" {description_arg} --set-upstream origin {source_branch} "
 
-            print(f'删除本地分支 {source_branch}，并切换到原分支 {original_source_branch}')
+            os.system(f'{cmd} > /dev/null 2>&1')
+            merge_request_url = ''
+            mr_list = self.current_proj.mergerequests.list(state='opened', order_by='updated_at')
+            for mr in mr_list:
+                commit_list = [commit.id for commit in mr.commits()]
+                if self.last_commit.hexsha in commit_list:
+                    merge_request_url = mr.web_url
+
+            print_step(f'删除本地分支 {source_branch}，并切换到原分支 {original_source_branch}')
             self.repo.git.checkout(original_source_branch)
             self.repo.delete_head(source_branch)
 
-            # 生成 MR
-            new_mr = self.current_proj.mergerequests.create({'source_branch': source_branch,
-                                                             'target_branch': mr_target_br,
-                                                             'title': mr_title})
+            # print(f'merge request 创建成功，URL: {new_mr.web_url}')
 
-            print(f'merge request 创建成功，URL: {new_mr.web_url}')
+            if len(merge_request_url) > 0:
+                print_step(f'merge request 创建成功，链接: {merge_request_url}')
+            else:
+                raise SystemExit('merge request 创建失败！')
 
 
 if __name__ == '__main__':
     # 创建配置文件
     opts, args = getopt.getopt(sys.argv, "", ["--init"])
     if '--init' in args:
-        f = open('MRConfig.ini', 'a')
+        f = open('MRConfig.ini', 'w')
         f.write("""
 [Keep]
 url = https://gitlab.gotokeep.com
@@ -200,3 +230,7 @@ api_version = 4
     # 创建 merge request
     helper = MRHelper()
     helper.create_merge_request()
+
+    # DEBUG
+    # changed_lines = CommitHelper.get_changed_lines(helper.last_commit, PODFILE)
+    # print(changed_lines)
