@@ -106,15 +106,16 @@ class MRHelper:
     @classmethod
     def get_repo_name(cls, repo: git.Repo) -> str:
         local_name = repo.working_tree_dir.split('/')[-1]
-        if len(local_name) > 0:
-            return local_name
+        url_name = repo.remotes.origin.url.split('.git')[0].split('/')[-1]
+        if len(url_name) > 0:
+            return url_name
         else:
-            return repo.remotes.origin.url.split('.git')[0].split('/')[-1]
+            return local_name
 
     def get_relative_mr(self, repo_url: str, commit: str) -> str | None:
         repo_name = repo_url.split('.git')[0].split('/')[-1]
         proj = self.get_gitlab_project(repo_name)
-        mr_list = proj.mergerequests.list(state='merged', order_by='updated_at')
+        mr_list = proj.mergerequests.list(state='merged', order_by='updated_at', get_all=True)
         for mr in mr_list:
             commit_list = [commit.id for commit in mr.commits()]
             if commit in commit_list:
@@ -162,6 +163,7 @@ class MRHelper:
             mr_title = make_question('请输入 MR 标题（直接回车会使用上述提交的 message）:')
             if len(mr_title) == 0:
                 mr_title = self.last_commit.message.split('\n')[0]
+            print_step(f'message: {mr_title}')
 
             # 获取关联 MR
             file_changed_lines: [str] = CommitHelper.get_changed_lines(CommitHelper.get_last_commit(self.repo), PODFILE)
@@ -179,7 +181,6 @@ class MRHelper:
                         pod_repo_name = url_result[0].split('.git')[0].split('/')[-1]
                         pod_commit = helper.get_gitlab_project(pod_repo_name).commits.get(commit_result[0])
                         relative_pod_mrs.append(pod_commit.web_url)
-            print_step(f'message: {mr_title}')
 
             description = ''
             if len(relative_pod_mrs) > 0:
@@ -212,7 +213,7 @@ class MRHelper:
             os.system(f'{cmd} >/dev/null 2>&1')
             time.sleep(1)   # 等待
             merge_request_url = ''
-            mr_list = self.current_proj.mergerequests.list(state='opened', order_by='updated_at')
+            mr_list = self.current_proj.mergerequests.list(state='opened', order_by='updated_at', get_all=True)
             for mr in mr_list:
                 commit_list = [commit.id for commit in mr.commits()]
                 if self.last_commit.hexsha in commit_list:
