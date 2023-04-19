@@ -20,6 +20,13 @@ createMR --init
 
 #### 方式二：直接运行脚本
 
+方式二和方式三需要安装 package：
+
+```shell
+pip3 install python-gitlab
+pip3 install gitpython
+```
+
 > 建议将 createMR.py 所在文件夹添加到终端配置中（例如 .zshrc）：
 > 
 > `export PATH="$PATH:/Users/liangguanghui/IdeaProjects/ShellScripts/GitShells"`
@@ -28,13 +35,30 @@ createMR --init
 python createMR.py --init
 ```
 
-上面两种方式都会在当前目录下生成一个 `MRConfig.ini` 文件。**需要将配置文件中的 token 替换为自己在 gitlab 生成的 token**。
+#### 方式三：运行 shell 脚本（推荐）
+
+> 将 createMR.sh 及 createMR.py 所在文件夹添加到终端配置中（例如 .zshrc）：
+> 
+> `export PATH="$PATH:/Users/liangguanghui/IdeaProjects/ShellScripts/GitShells"`
+
+```shell
+createMR.sh --init
+# 如果遇到 zsh: permission denied: ./createMR.sh 错误。需要执行：sudo chmod 777 createMR.sh
+```
+
+上面几种方式运行初始化配置指令后，都会在当前目录下生成一个 `MRConfig.ini` 文件。**需要将配置文件中的 token 替换为自己在 gitlab 生成的 token**。
 
 ![token](images/gitlab_token.png)
 
 ### 生成 merge request
 
-和生成配置类似，生成 merge request 也有相应的两种方式，只不过需要把 `--init` 参数去掉
+和生成配置类似，生成 merge request 也有相应的两种方式，只不过需要把 `--init` 参数去掉。例如：
+
+```shell
+createMR                # 方式一
+python3 createMR.py     # 方式二
+createMR.sh             # 方式三
+```
 
 样图：
 
