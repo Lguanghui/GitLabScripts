@@ -32,9 +32,11 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+BASEDIR=$(dirname "$0")
+
 if [ -z "$init" ]; then
-  python3 createMR.py
+  python3 "$BASEDIR/createMR.py"
 else
   echo "创建配置文件中..."
-  python3 createMR.py --init
+  python3 "$BASEDIR/createMR.py" --init
 fi
