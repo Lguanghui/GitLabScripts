@@ -1,5 +1,9 @@
 # ShellScripts
 
+[👉 createMR](https://gitlab.com/Lguanghui/ShellScripts/-/blob/master/README.md#createmr-%E8%84%9A%E6%9C%AC)
+
+[👉 mergeRequest](https://gitlab.com/Lguanghui/ShellScripts#mergerequest-%E8%84%9A%E6%9C%AC)
+
 ## createMR 脚本
 
 > 需要 python 版本 >= 3.10
