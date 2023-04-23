@@ -4,7 +4,11 @@
 
 ### 初始化配置
 
-#### 方式一：通过可执行文件运行
+> 需要 python 版本 > 3.10，
+> 
+> 推荐使用 brew 安装和管理 python: `brew install python` `brew upgrade`
+
+#### 方式一：通过可执行文件运行 (不推荐，执行速度比较慢)
 
 将 GitShells/dist/createMR 可执行文件下载放置到某个路径下（自定义）。
 
