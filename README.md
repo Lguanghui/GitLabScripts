@@ -1,12 +1,12 @@
 # ShellScripts
 
-## createMR
+## createMR 脚本
 
-### 初始化配置
-
-> 需要 python 版本 > 3.10，
+> 需要 python 版本 >= 3.10
 > 
 > 推荐使用 brew 安装和管理 python: `brew install python` `brew upgrade`
+
+### 初始化配置
 
 #### 方式一：通过可执行文件运行 (不推荐，执行速度比较慢)
 
@@ -70,7 +70,7 @@ createMR.sh             # 方式三
 
 脚本流程与下面的 mergeRequest.sh 相似。
 
-## mergeRequest
+## mergeRequest 脚本
 
 ### 使用方法
 
