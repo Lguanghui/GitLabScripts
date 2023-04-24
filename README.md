@@ -8,7 +8,7 @@
 
 > **⚠️ 需要 python 版本 >= 3.10**
 > 
-> 推荐使用 brew 安装和管理 python: `brew install python` `brew upgrade`
+> 推荐使用 brew 安装和管理 python: `brew install python` `brew upgrade`(完成后重启终端)
 
 ### 初始化配置
 
