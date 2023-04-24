@@ -170,7 +170,7 @@ class MRHelper:
             relative_pod_mrs: [str] = []
             for line in file_changed_lines:
                 line = re.sub('\s+', '', line)  # 去掉空格，方便提取
-                commit_result: [str] = re.findall(r":commit=>\"(.+?)\"", line)
+                commit_result: [str] = re.findall(r":commit=>\"(.+?)\"", line.replace('\'', '"'))
                 url_result: [str] = re.findall(r":git=>\"(.+?)\"", line.replace('\'', '"'))
                 if len(commit_result) and len(url_result):
                     mr_url = helper.get_relative_mr(url_result[0], commit_result[0])
