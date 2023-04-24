@@ -204,8 +204,7 @@ class MRHelper:
 
             print_step(f'将分支 {source_branch} push 到 remote')
             # self.repo.git.push('origin', source_branch)
-            # 生成 MR
-            description_arg = f'-o merge_request.description=\"{description}\"' if len(description) > 0 else ''
+            # 生成 MR。当用户对某些仓库没有管理权限时，使用 gitlab-python 内置的创建 MR 方法会失败，因此使用 shell 指令创建 MR
             cmd = f"git push " \
                   f"-o merge_request.create " \
                   f"-o merge_request.target={mr_target_br} " \
