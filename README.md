@@ -6,7 +6,7 @@
 
 ## createMR 脚本
 
-> 需要 python 版本 >= 3.10
+> **⚠️ 需要 python 版本 >= 3.10**
 > 
 > 推荐使用 brew 安装和管理 python: `brew install python` `brew upgrade`
 
@@ -54,7 +54,7 @@ createMR.sh --init
 # 如果遇到 zsh: permission denied: ./createMR.sh 错误。需要执行：sudo chmod 777 createMR.sh
 ```
 
-上面几种方式运行初始化配置指令后，都会在当前目录下生成一个 `MRConfig.ini` 文件。**需要将配置文件中的 token 替换为自己在 gitlab 生成的 token**。
+上面几种方式运行初始化配置指令后，都会在当前目录下生成一个 `MRConfig.ini` 文件，这个配置文件应该和脚本/可执行文件在同一个文件夹下。**需要将配置文件中的 token 替换为自己在 gitlab 生成的 token**。
 
 ![token](images/gitlab_token.png)
 
