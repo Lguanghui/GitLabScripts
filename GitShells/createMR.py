@@ -236,7 +236,7 @@ if __name__ == '__main__':
     # 创建配置文件
     opts, args = getopt.getopt(sys.argv, "", ["--init"])
     if '--init' in args:
-        f = open('MRConfig.ini', 'w')
+        f = open(get_root_path() + '/MRConfig.ini', 'w')
         f.write("""
 [Keep]
 url = https://gitlab.gotokeep.com
