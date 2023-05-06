@@ -27,6 +27,8 @@ import sys
 import time
 import git
 import gitlab
+import configparser
+from loadingAnimation import LoadingAnimation
 
 PODFILE = 'Podfile'
 COMMIT_CONFIRM_PROMPT = '''
@@ -237,6 +239,8 @@ if __name__ == '__main__':
     opts, args = getopt.getopt(sys.argv, "", ["--init"])
     if '--init' in args:
         f = open(get_root_path() + '/MRConfig.ini', 'w')
+        f.seek(0)
+        f.truncate()
         f.write("""
 [Keep]
 url = https://gitlab.gotokeep.com
@@ -247,8 +251,15 @@ api_version = 4
         raise SystemExit('配置文件创建成功')
 
     # 创建 merge request
-    helper = MRHelper()
-    helper.create_merge_request()
+    LoadingAnimation.sharedInstance.showWith('获取仓库配置中，需要联网，请耐心等待...', finish_message='仓库配置获取完成✅', failed_message='仓库配置获取失败❌')
+    try:
+        helper = MRHelper()
+    except Exception as e:
+        LoadingAnimation.sharedInstance.failed = True
+        time.sleep(0.2)
+        raise SystemExit()
+    LoadingAnimation.sharedInstance .finished = True
+    # helper.create_merge_request()
 
     # DEBUG
     # changed_lines = CommitHelper.get_changed_lines(helper.last_commit, PODFILE)
