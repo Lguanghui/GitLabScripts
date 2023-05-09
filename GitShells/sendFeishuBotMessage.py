@@ -29,7 +29,7 @@ def send_feishubot_message(merge_request_url: str, author: str, message: str) ->
     config = configparser.ConfigParser()
     config.read(get_root_path() + '/MRConfig.ini')
 
-    answer = make_question('是否让机器人发送 merge request 通知 y(回车)/n: ', ['y', 'n'])
+    answer = make_question('是否让机器人发送 merge request 通知 y/n(回车默认不发送): ', ['n', 'y'])
     if answer == 'n':
         return False
 
