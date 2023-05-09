@@ -14,7 +14,6 @@
 
 from threading import Thread
 from threading import Event
-import threading
 import time
 
 

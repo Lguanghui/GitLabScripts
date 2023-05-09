@@ -28,6 +28,7 @@ import time
 import git
 import gitlab
 import configparser
+import sendFeishuBotMessage
 from loadingAnimation import LoadingAnimation
 
 PODFILE = 'Podfile'
@@ -168,6 +169,9 @@ class MRHelper:
             print_step(f'message: {mr_title}')
 
             # 获取关联 MR
+            LoadingAnimation.sharedInstance.showWith('处理 Podfile, 获取相关组件库 merge request 中...',
+                                                     finish_message='组件库 merge request 处理完成✅',
+                                                     failed_message='组件库 merge request 处理失败❌')
             file_changed_lines: [str] = CommitHelper.get_changed_lines(CommitHelper.get_last_commit(self.repo), PODFILE)
             relative_pod_mrs: [str] = []
             for line in file_changed_lines:
@@ -183,6 +187,7 @@ class MRHelper:
                         pod_repo_name = url_result[0].split('.git')[0].split('/')[-1]
                         pod_commit = helper.get_gitlab_project(pod_repo_name).commits.get(commit_result[0])
                         relative_pod_mrs.append(pod_commit.web_url)
+            LoadingAnimation.sharedInstance.finished = True
 
             description = ''
             if len(relative_pod_mrs) > 0:
@@ -215,6 +220,9 @@ class MRHelper:
 
             os.system(f'{cmd} >/dev/null 2>&1')
             time.sleep(1)   # 等待
+            LoadingAnimation.sharedInstance.showWith('获取 merge request 并修改 description 中...',
+                                                     finish_message='Done✅',
+                                                     failed_message='')
             merge_request_url = ''
             mr_list = self.current_proj.mergerequests.list(state='opened', order_by='updated_at', get_all=True)
             for mr in mr_list:
@@ -224,20 +232,41 @@ class MRHelper:
                     mr.description = description
                     mr.save()
 
+            LoadingAnimation.sharedInstance.finished = True
+
             print_step(f'删除本地分支 {source_branch}，并切换到原分支 {original_source_branch}')
             self.repo.git.checkout(original_source_branch)
             self.repo.delete_head(source_branch)
 
             if len(merge_request_url) > 0:
                 print_step(f'merge request 创建成功，链接: \n    {merge_request_url}')
+                sendFeishuBotMessage.send_feishubot_message(merge_request_url, author=str(self.last_commit.author), message=self.last_commit.message.strip())
             else:
                 raise SystemExit('merge request 创建失败！')
 
 
-if __name__ == '__main__':
-    # 创建配置文件
-    opts, args = getopt.getopt(sys.argv, "", ["--init"])
-    if '--init' in args:
+def get_config_new_value(key: str, section: str, config: configparser.ConfigParser) -> str:
+    if key in config[section] and len(config[section][key]) > 0:
+        return config[section][key]
+    else:
+        return ''
+
+
+def create_config_file():
+    path = get_root_path() + '/MRConfig.ini'
+    if os.path.exists(path):
+        current_config = configparser.ConfigParser()
+        current_config.read(path)
+        section = current_config.sections()[0]
+        current_config[section]['url'] = 'https://gitlab.gotokeep.com'
+        current_config[section]['private_token'] = get_config_new_value('private_token', section, current_config)
+        current_config[section]['api_version'] = '4'
+        current_config[section]['send_feishubot_message'] = get_config_new_value('send_feishubot_message', section, current_config)
+        current_config[section]['feishu_bot_webhook'] = get_config_new_value('feishu_bot_webhook', section, current_config)
+        current_config[section]['feishu_bot_@_user_openid'] = get_config_new_value('feishu_bot_@_user_openid', section, current_config)
+        with open(path, 'w') as configfile:
+            current_config.write(configfile)
+    else:
         f = open(get_root_path() + '/MRConfig.ini', 'w')
         f.seek(0)
         f.truncate()
@@ -246,9 +275,19 @@ if __name__ == '__main__':
 url = https://gitlab.gotokeep.com
 private_token = *****
 api_version = 4
-        """.strip())
+send_feishubot_message = no
+feishu_bot_webhook = 
+feishu_bot_@_user_openid = 
+            """.strip())
         f.close()
-        raise SystemExit('配置文件创建成功')
+    raise SystemExit('配置文件创建成功')
+
+
+if __name__ == '__main__':
+    # 创建配置文件
+    opts, args = getopt.getopt(sys.argv, "", ["--init"])
+    if '--init' in args:
+        create_config_file()
 
     # 创建 merge request
     LoadingAnimation.sharedInstance.showWith('获取仓库配置中，需要联网，请耐心等待...', finish_message='仓库配置获取完成✅', failed_message='仓库配置获取失败❌')
@@ -258,8 +297,8 @@ api_version = 4
         LoadingAnimation.sharedInstance.failed = True
         time.sleep(0.2)
         raise SystemExit()
-    LoadingAnimation.sharedInstance .finished = True
-    # helper.create_merge_request()
+    LoadingAnimation.sharedInstance.finished = True
+    helper.create_merge_request()
 
     # DEBUG
     # changed_lines = CommitHelper.get_changed_lines(helper.last_commit, PODFILE)
