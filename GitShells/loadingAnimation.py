@@ -52,6 +52,7 @@ class LoadingAnimation(metaclass=Singleton):
             self.__finished = finished
             if finished:
                 self.__threadEvent.set()
+                time.sleep(0.1)
         else:
             raise ValueError
 
@@ -65,6 +66,7 @@ class LoadingAnimation(metaclass=Singleton):
             self.__failed = failed
             if failed:
                 self.__threadEvent.set()
+                time.sleep(0.1)
         else:
             raise ValueError
 
@@ -100,6 +102,7 @@ class LoadingAnimation(metaclass=Singleton):
             print('')
             self.__threadBlockEvent.wait()
             self.__threadBlockEvent.clear()
+
 
 if __name__ == '__main__':
     lock = LoadingAnimation.sharedInstance
