@@ -265,6 +265,7 @@ def create_config_file():
         current_config[section]['send_feishubot_message'] = get_config_new_value('send_feishubot_message', section, current_config)
         current_config[section]['feishu_bot_webhook'] = get_config_new_value('feishu_bot_webhook', section, current_config)
         current_config[section]['feishu_bot_@_user_openid'] = get_config_new_value('feishu_bot_@_user_openid', section, current_config)
+        current_config[section]['feishu_bot_self_openid'] = get_config_new_value('feishu_bot_self_openid', section, current_config)
         with open(path, 'w') as configfile:
             current_config.write(configfile)
     else:
@@ -279,6 +280,7 @@ api_version = 4
 send_feishubot_message = no
 feishu_bot_webhook = 
 feishu_bot_@_user_openid = 
+feishu_bot_self_openid = 
             """.strip())
         f.close()
     raise SystemExit('配置文件创建成功')
