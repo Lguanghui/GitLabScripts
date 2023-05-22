@@ -241,7 +241,9 @@ class MRHelper:
             if len(merge_request_url) > 0:
                 print_step(f'merge request 创建成功，链接: \n    {merge_request_url}')
                 print('')
-                sendFeishuBotMessage.send_feishubot_message(merge_request_url, author=str(self.last_commit.author), message=self.last_commit.message.strip())
+                sendFeishuBotMessage.send_feishubot_message(merge_request_url,
+                                                            author=str(self.last_commit.author),
+                                                            message=mr_title.strip())
             else:
                 raise SystemExit('merge request 创建失败！')
 
