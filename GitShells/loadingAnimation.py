@@ -95,7 +95,7 @@ class LoadingAnimation(metaclass=Singleton):
                 print('\r\033[K%s %s' % (symbols[i], self.message), flush=True, end='')
                 self.__threadEvent.wait(0.1)
                 self.__threadEvent.clear()
-            if self.finished == True and not self.failed:
+            if self.finished is True and not self.failed:
                 print('\r\033[K%s' % self.finish_message, flush=True)
             else:
                 print('\r\033[K%s' % self.failed_message, flush=True)

@@ -127,6 +127,17 @@ class MRHelper:
         # 没有找到对应的 MR，则直接返回 commit 对应的链接
         return proj.commits.get(commit).web_url
 
+    def get_mr_state(self, mr_url: str) -> str:
+        """
+        获取指定 merge request 的状态
+        :param mr_url: merge request url
+        :return: 状态字符串：opened, closed, locked, merged
+        """
+        mr_id = mr_url.split('/')[-1]
+        mr = self.current_proj.mergerequests.get(mr_id)
+        return mr.state
+
+
     @classmethod
     def get_formatted_time(cls, seconds) -> str:
         return time.strftime('%a, %d %b %Y %H:%M', time.gmtime(seconds))
