@@ -9,7 +9,8 @@
 > **⚠️ 需要 python 版本 >= 3.10**
 > 
 > 推荐使用 brew 安装和管理 python: `brew install python` `brew upgrade`(完成后重启终端)
-> 建议使用时关闭 Charles 等代理软件对电脑端的代理（对手机端代理无影响）
+>
+> 使用时如出现 SSL 等相关错误，请关闭 Charles 等代理软件对电脑端的代理（对手机端代理无影响）
 
 ### 初始化配置
 
