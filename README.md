@@ -12,21 +12,7 @@
 
 ### 初始化配置
 
-#### 方式一：通过可执行文件运行 (不推荐，执行速度比较慢)
-
-将 GitShells/dist/createMR 可执行文件下载放置到某个路径下（自定义）。
-
-> 建议将可执行文件所在文件夹添加到终端配置中（例如 .zshrc）：
-> 
-> `export PATH="$PATH:/Users/liangguanghui/IdeaProjects/ShellScripts/GitShells/dist"`
-
-终端执行：
-
-```shell
-createMR --init
-```
-
-#### 方式二：直接运行脚本
+#### 方式一：直接运行脚本
 
 方式二和方式三需要安装 package：
 
@@ -43,7 +29,7 @@ pip3 install gitpython
 python createMR.py --init
 ```
 
-#### 方式三：运行 shell 脚本（推荐）
+#### 方式二：运行 shell 脚本（推荐）
 
 > 将 createMR.sh 及 createMR.py 所在文件夹添加到终端配置中（例如 .zshrc）：
 > 
@@ -58,14 +44,15 @@ createMR.sh --init
 
 ![token](images/gitlab_token.png)
 
+如果需要发送飞书机器人消息的话，还需要配置机器人 webhook 地址、被@用户的飞书 ID。获取飞书用户 ID 的方法参见 https://www.cnblogs.com/mxcl/p/16359730.html，并设置 `send_feishubot_message` 为 yes
+
 ### 生成 merge request
 
 和生成配置类似，生成 merge request 也有相应的两种方式，只不过需要把 `--init` 参数去掉。例如：
 
 ```shell
-createMR                # 方式一
-python3 createMR.py     # 方式二
-createMR.sh             # 方式三
+python3 createMR.py     # 方式一
+createMR.sh             # 方式二
 ```
 
 样图：
