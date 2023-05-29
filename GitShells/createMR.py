@@ -30,6 +30,7 @@ import gitlab
 import configparser
 import sendFeishuBotMessage
 from loadingAnimation import LoadingAnimation
+from makeQuestion import make_question
 
 PODFILE = 'Podfile'
 COMMIT_CONFIRM_PROMPT = '''
@@ -45,24 +46,6 @@ def get_root_path() -> str:
         return os.path.dirname(sys.executable)
     elif __file__:
         return os.path.dirname(__file__)
-
-
-def make_question(prompt: str, expect_answers: [str] = None):
-    """
-    获取终端输入
-    :param prompt: 提示语
-    :param expect_answers: 有效答案
-    :return: 有效答案中的其中一个。如果用户直接回车，则返回有效答案中的第一个
-    """
-    valid = False
-    expect_answers = expect_answers if (expect_answers is not None) else []
-    while not valid:
-        answer = input(prompt)
-        if (answer in expect_answers) or len(answer) == 0 or (len(expect_answers) == 0 and len(answer) > 0):
-            valid = True
-            return answer \
-                if (len(answer) > 0) \
-                else (expect_answers[0] if (expect_answers is not None) and len(expect_answers) > 0 else '')
 
 
 def print_step(*values, sep=' ', end='\n', file=None):

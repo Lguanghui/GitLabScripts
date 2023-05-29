@@ -15,7 +15,8 @@
 import requests
 import json
 import configparser
-from createMR import get_root_path, make_question
+from createMR import get_root_path
+from makeQuestion import make_question
 
 
 # url = "https://open.feishu.cn/open-apis/bot/v2/hook/2f7e2c1c-cd18-4663-85a4-f0bf3c548c63"
