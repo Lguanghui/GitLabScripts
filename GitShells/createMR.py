@@ -61,7 +61,7 @@ class CommitHelper:
         # 找到跟 file 相关的文件，例如 ExamplePod/Podfile
         relative_paths = []
         for _diff in commit.diff(commit.parents[0]):
-            if _diff.a_blob.path is None:
+            if _diff.a_blob is None:
                 continue
             if file in _diff.a_blob.path:
                 relative_paths.append(_diff.a_blob.path)
