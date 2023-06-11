@@ -21,6 +21,11 @@ while [[ $# -gt 0 ]]; do
       shift # past argument
       shift # past value
       ;;
+    -d|--debug)
+      debug="$1"
+      shift # past argument
+      shift # past value
+      ;;
     -*)
       echo "Unknown option $1"
       exit 1
@@ -35,7 +40,7 @@ done
 BASEDIR=$(dirname "$0")
 
 if [ -z "$init" ]; then
-  python3 "$BASEDIR/createMR.py"
+  python3 "$BASEDIR/createMR.py" $debug
 else
   echo "创建配置文件中..."
   python3 "$BASEDIR/createMR.py" --init

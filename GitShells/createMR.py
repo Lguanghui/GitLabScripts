@@ -22,6 +22,7 @@ import difflib
 import getopt
 import getpass
 import os
+import queue
 import re
 import sys
 import time
@@ -31,6 +32,8 @@ import configparser
 import sendFeishuBotMessage
 from loadingAnimation import LoadingAnimation
 from makeQuestion import make_question
+from MergeRequestURLFetchThread import MergeRequestURLFetchThread
+from Utils import debugPrint, update_debug_mode
 
 PODFILE = 'Podfile'
 COMMIT_CONFIRM_PROMPT = '''
@@ -90,6 +93,8 @@ class MRHelper:
         self.repo = git.Repo(os.getcwd(), search_parent_directories=True)
         self.current_proj = self.get_gitlab_project(self.get_repo_name(self.repo))
         self.last_commit = CommitHelper.get_last_commit(self.repo)
+        self.mr_fetcher_threads: [MergeRequestURLFetchThread] = []
+        self.queue = queue.Queue()
 
     @classmethod
     def get_repo_name(cls, repo: git.Repo) -> str:
@@ -121,7 +126,6 @@ class MRHelper:
         mr_id = mr_url.split('/')[-1]
         mr = self.current_proj.mergerequests.get(mr_id)
         return mr.state
-
 
     @classmethod
     def get_formatted_time(cls, seconds) -> str:
@@ -175,14 +179,34 @@ class MRHelper:
                 commit_result: [str] = re.findall(r":commit=>\"(.+?)\"", line.replace('\'', '"'))
                 url_result: [str] = re.findall(r":git=>\"(.+?)\"", line.replace('\'', '"'))
                 if len(commit_result) and len(url_result):
-                    mr_url = helper.get_relative_mr(url_result[0], commit_result[0])
-                    if mr_url is not None:
-                        relative_pod_mrs.append(mr_url)
-                    else:
-                        # 无法获取对应的 MR 链接，直接获取 commit 的链接
-                        pod_repo_name = url_result[0].split('.git')[0].split('/')[-1]
-                        pod_commit = helper.get_gitlab_project(pod_repo_name).commits.get(commit_result[0])
-                        relative_pod_mrs.append(pod_commit.web_url)
+                    # mr_url = helper.get_relative_mr(url_result[0], commit_result[0])
+                    repo_name = url_result[0].split('.git')[0].split('/')[-1]
+                    proj = self.get_gitlab_project(repo_name)
+                    thread = MergeRequestURLFetchThread(proj, commit_result[0], self.queue)
+                    self.mr_fetcher_threads.append(thread)
+                    # thread.start()
+                    # if mr_url is not None:
+                    #     relative_pod_mrs.append(mr_url)
+                    # else:
+                    #     # 无法获取对应的 MR 链接，直接获取 commit 的链接
+                    #     pod_repo_name = url_result[0].split('.git')[0].split('/')[-1]
+                    #     pod_commit = helper.get_gitlab_project(pod_repo_name).commits.get(commit_result[0])
+                    #     relative_pod_mrs.append(pod_commit.web_url)
+
+            for thread in self.mr_fetcher_threads:
+                thread.start()
+
+            # 等待所有线程执行
+            for thread in self.mr_fetcher_threads:
+                thread.join()
+                debugPrint(f"线程 {thread.proj.attributes['name']} 完成")
+
+            # 取出队列所有元素
+            while not self.queue.empty():
+                url = self.queue.get()
+                if len(url):
+                    relative_pod_mrs.append(url)
+
             LoadingAnimation.sharedInstance.finished = True
 
             description = ''
@@ -215,9 +239,9 @@ class MRHelper:
                   f"--set-upstream origin {source_branch} "
 
             os.system(f'{cmd} >/dev/null 2>&1')
-            time.sleep(1)   # 等待
+            time.sleep(1)  # 等待
             LoadingAnimation.sharedInstance.showWith('获取 merge request 并修改 description 中...',
-                                                     finish_message='Done✅',
+                                                     finish_message='merge request 创建完成✅',
                                                      failed_message='')
             merge_request_url = ''
             mr_list = self.current_proj.mergerequests.list(state='opened', order_by='updated_at', get_all=True)
@@ -260,10 +284,14 @@ def create_config_file():
         current_config[section]['url'] = 'https://gitlab.gotokeep.com'
         current_config[section]['private_token'] = get_config_new_value('private_token', section, current_config)
         current_config[section]['api_version'] = '4'
-        current_config[section]['send_feishubot_message'] = get_config_new_value('send_feishubot_message', section, current_config)
-        current_config[section]['feishu_bot_webhook'] = get_config_new_value('feishu_bot_webhook', section, current_config)
-        current_config[section]['feishu_bot_@_user_openid'] = get_config_new_value('feishu_bot_@_user_openid', section, current_config)
-        current_config[section]['feishu_bot_self_openid'] = get_config_new_value('feishu_bot_self_openid', section, current_config)
+        current_config[section]['send_feishubot_message'] = get_config_new_value('send_feishubot_message', section,
+                                                                                 current_config)
+        current_config[section]['feishu_bot_webhook'] = get_config_new_value('feishu_bot_webhook', section,
+                                                                             current_config)
+        current_config[section]['feishu_bot_@_user_openid'] = get_config_new_value('feishu_bot_@_user_openid', section,
+                                                                                   current_config)
+        current_config[section]['feishu_bot_self_openid'] = get_config_new_value('feishu_bot_self_openid', section,
+                                                                                 current_config)
         with open(path, 'w') as configfile:
             current_config.write(configfile)
     else:
@@ -286,12 +314,16 @@ feishu_bot_self_openid =
 
 if __name__ == '__main__':
     # 创建配置文件
-    opts, args = getopt.getopt(sys.argv, "", ["--init"])
+    opts, args = getopt.getopt(sys.argv, "", ["--init", "--debug"])
     if '--init' in args:
         create_config_file()
+    if '--debug' in args:
+        update_debug_mode(True)
+        debugPrint('当前是 DEBUG 模式')
 
     # 创建 merge request
-    LoadingAnimation.sharedInstance.showWith('获取仓库配置中，需要联网，请耐心等待...', finish_message='仓库配置获取完成✅', failed_message='仓库配置获取失败❌')
+    LoadingAnimation.sharedInstance.showWith('获取仓库配置中，需要联网，请耐心等待...',
+                                             finish_message='仓库配置获取完成✅', failed_message='仓库配置获取失败❌')
     try:
         helper = MRHelper()
     except Exception as e:
