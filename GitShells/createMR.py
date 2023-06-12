@@ -34,6 +34,7 @@ from loadingAnimation import LoadingAnimation
 from makeQuestion import make_question
 from MergeRequestURLFetchThread import MergeRequestURLFetchThread
 from Utils import debugPrint, update_debug_mode
+from gitlab.v4.objects.projects import Project
 
 PODFILE = 'Podfile'
 COMMIT_CONFIRM_PROMPT = '''
@@ -90,6 +91,7 @@ class CommitHelper:
 class MRHelper:
     def __init__(self):
         self.gitlab = gitlab.Gitlab.from_config('Keep', [get_root_path() + '/MRConfig.ini'])
+        self.projects: [Project] = self.gitlab.projects.list(get_all=True)
         self.repo = git.Repo(os.getcwd(), search_parent_directories=True)
         self.current_proj = self.get_gitlab_project(self.get_repo_name(self.repo))
         self.last_commit = CommitHelper.get_last_commit(self.repo)
@@ -131,10 +133,13 @@ class MRHelper:
     def get_formatted_time(cls, seconds) -> str:
         return time.strftime('%a, %d %b %Y %H:%M', time.gmtime(seconds))
 
-    def get_gitlab_project(self, keyword: str):
-        for proj in self.gitlab.projects.list(get_all=True):
+    def get_gitlab_project(self, keyword: str) -> Project:
+        for proj in self.projects:
+            # for proj in self.gitlab.projects.list(get_all=True):
             if proj.name == keyword:
+                debugPrint("从数组中找到 project")
                 return proj
+        debugPrint("从数组中没有找到 project，重新拉取")
         return self.gitlab.projects.list(search=keyword, get_all=True)[0]
 
     def check_has_uncommitted_changes(self) -> bool:
@@ -172,7 +177,9 @@ class MRHelper:
             LoadingAnimation.sharedInstance.showWith('处理 Podfile, 获取相关组件库 merge request 中...',
                                                      finish_message='组件库 merge request 处理完成✅',
                                                      failed_message='组件库 merge request 处理失败❌')
+            debugPrint("开始处理 Podfile")
             file_changed_lines: [str] = CommitHelper.get_changed_lines(CommitHelper.get_last_commit(self.repo), PODFILE)
+            debugPrint("Podfile 处理完成")
             relative_pod_mrs: [str] = []
             for line in file_changed_lines:
                 line = re.sub('\s+', '', line)  # 去掉空格，方便提取
@@ -181,7 +188,9 @@ class MRHelper:
                 if len(commit_result) and len(url_result):
                     # mr_url = helper.get_relative_mr(url_result[0], commit_result[0])
                     repo_name = url_result[0].split('.git')[0].split('/')[-1]
+                    debugPrint(f"获取组件库 {repo_name} project")
                     proj = self.get_gitlab_project(repo_name)
+                    debugPrint(f"组件库 {repo_name} project 获取成功")
                     thread = MergeRequestURLFetchThread(proj, commit_result[0], self.queue)
                     self.mr_fetcher_threads.append(thread)
                     # thread.start()
@@ -335,6 +344,7 @@ if __name__ == '__main__':
     except Exception as e:
         LoadingAnimation.sharedInstance.failed = True
         time.sleep(0.2)
+        debugPrint(e)
         raise SystemExit()
     LoadingAnimation.sharedInstance.finished = True
     helper.create_merge_request()

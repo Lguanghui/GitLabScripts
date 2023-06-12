@@ -35,7 +35,7 @@ class MergeRequestURLFetchThread(threading.Thread):
 
     def run(self) -> None:
         debugPrint(f"project { self.project_name } 开始获取 merge request")
-        debugPrint(f"当前线程：{ threading.current_thread().name }")
+        debugPrint(f"当前线程：{ threading.current_thread().name } project: {self.project_name}")
         # gitlab API 内部使用了同步操作，所以这里使用多线程的意义不大
         mr_list = self.proj.mergerequests.list(state='merged', order_by='updated_at', get_all=True)
         for mr in mr_list:
