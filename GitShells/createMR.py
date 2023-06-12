@@ -33,8 +33,10 @@ import sendFeishuBotMessage
 from loadingAnimation import LoadingAnimation
 from makeQuestion import make_question
 from MergeRequestURLFetchThread import MergeRequestURLFetchThread
-from Utils import debugPrint, update_debug_mode
+from Utils import debugPrint, update_debug_mode, get_mr_url_from_local_log, MergeRequestInfo
 from gitlab.v4.objects.projects import Project
+from gitlab.v4.objects import ProjectMergeRequest
+from pathlib import Path
 
 PODFILE = 'Podfile'
 COMMIT_CONFIRM_PROMPT = '''
@@ -247,31 +249,50 @@ class MRHelper:
                   f"-o merge_request.title=\"{mr_title}\" " \
                   f"--set-upstream origin {source_branch} "
 
-            os.system(f'{cmd} >/dev/null 2>&1')
+            log_path = os.path.join(Path.home(), "mrLog.txt")
+            if os.path.exists(log_path):
+                os.remove(log_path)
+            os.system(f'{cmd} > { log_path } 2>&1')
             time.sleep(1)  # 等待
             LoadingAnimation.sharedInstance.showWith('获取 merge request 并修改 description 中...',
                                                      finish_message='merge request 创建完成✅',
                                                      failed_message='')
             merge_request_url = ''
-            retry_count = 0
-            while retry_count < 8 and len(merge_request_url) == 0:
-                debugPrint(f"第 {retry_count} 次尝试获取刚创建的 merge request 链接")
-                mr_list = self.current_proj.mergerequests.list(state='opened', order_by='updated_at', get_all=True)
-                for mr in mr_list:
-                    commit_list = [commit.id for commit in mr.commits()]
-                    if self.last_commit.hexsha in commit_list:
-                        merge_request_url = mr.web_url
-                        mr.description = description
-                        mr.save()
-                        break
-                time.sleep(1)
-                retry_count += 1
+
+            mr_info_from_local: MergeRequestInfo = get_mr_url_from_local_log(log_path)
+            if len(mr_info_from_local.url) > 0 and len(mr_info_from_local.id) > 0:
+                debugPrint(f"从本地 log 中拿到 merge request url: {mr_info_from_local.url}")
+                merge_request_url = mr_info_from_local.url
+                merge_request: ProjectMergeRequest = self.current_proj.mergerequests.get(mr_info_from_local.id)
+                merge_request.description = description
+                merge_request.save()
+            else:
+                retry_count = 0
+                while retry_count < 8 and len(merge_request_url) == 0:
+                    debugPrint(f"第 {retry_count} 次尝试获取刚创建的 merge request 链接")
+                    mr_list = self.current_proj.mergerequests.list(state='opened', order_by='updated_at', get_all=True)
+                    for mr in mr_list:
+                        commit_list = [commit.id for commit in mr.commits()]
+                        if self.last_commit.hexsha in commit_list:
+                            merge_request_url = mr.web_url
+                            mr.description = description
+                            mr.save()
+                            break
+                    time.sleep(1)
+                    retry_count += 1
 
             LoadingAnimation.sharedInstance.finished = True
 
             print_step(f'删除本地分支 {source_branch}，并切换到原分支 {original_source_branch}')
             self.repo.git.checkout(original_source_branch)
             self.repo.delete_head(source_branch)
+
+            # 删除 log
+            try:
+                if os.path.exists(log_path):
+                    os.remove(log_path)
+            except FileNotFoundError as file_error:
+                debugPrint(f"删除本地 log 失败，文件不存在: {file_error}")
 
             if len(merge_request_url) > 0:
                 print_step(f'merge request 创建成功，链接: \n    {merge_request_url}')

@@ -12,7 +12,11 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+from collections import namedtuple
+
 DEBUG_MODE = False
+
+MergeRequestInfo = namedtuple('MergeRequestInfo', ['url', 'id'])
 
 
 def update_debug_mode(value: bool):
@@ -35,8 +39,27 @@ def debugPrint(*values, sep=' ', end='\n', file=None):
     :return:
     """
     if DEBUG_MODE is True:
-        _values = (f'\r\033[K{ Colors.WARNING }🐞',) + values + (Colors.ENDC, )
+        _values = (f'\r\033[K{Colors.WARNING}🐞',) + values + (Colors.ENDC,)
         print(*_values, sep=sep, end=end, file=file)
+
+
+def get_mr_url_from_local_log(log_path: str) -> MergeRequestInfo:
+    """
+    从本地 log 获取生成的 merge request 链接
+    :param log_path: log 路径
+    :return: merge request 链接
+    """
+    mr_url = ""
+    mr_id = ""
+    with open(log_path, 'r') as f:
+        lines = f.readlines()
+        for line in lines:
+            if line.replace(' ', '').startswith("remote:http"):
+                mr_url = line.replace(' ', '').lstrip("remote:")
+                break
+    if len(mr_url.split("/")) > 0:
+        mr_id = mr_url.split("/")[-1]
+    return MergeRequestInfo(mr_url, mr_id)
 
 
 class Colors:
@@ -49,46 +72,51 @@ class Colors:
     ENDC = '\033[0m'
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
-    CEND      = '\33[0m'
-    CBOLD     = '\33[1m'
-    CITALIC   = '\33[3m'
-    CURL      = '\33[4m'
-    CBLINK    = '\33[5m'
-    CBLINK2   = '\33[6m'
+    CEND = '\33[0m'
+    CBOLD = '\33[1m'
+    CITALIC = '\33[3m'
+    CURL = '\33[4m'
+    CBLINK = '\33[5m'
+    CBLINK2 = '\33[6m'
     CSELECTED = '\33[7m'
 
-    CBLACK  = '\33[30m'
-    CRED    = '\33[31m'
-    CGREEN  = '\33[32m'
+    CBLACK = '\33[30m'
+    CRED = '\33[31m'
+    CGREEN = '\33[32m'
     CYELLOW = '\33[33m'
-    CBLUE   = '\33[34m'
+    CBLUE = '\33[34m'
     CVIOLET = '\33[35m'
-    CBEIGE  = '\33[36m'
-    CWHITE  = '\33[37m'
+    CBEIGE = '\33[36m'
+    CWHITE = '\33[37m'
 
-    CBLACKBG  = '\33[40m'
-    CREDBG    = '\33[41m'
-    CGREENBG  = '\33[42m'
+    CBLACKBG = '\33[40m'
+    CREDBG = '\33[41m'
+    CGREENBG = '\33[42m'
     CYELLOWBG = '\33[43m'
-    CBLUEBG   = '\33[44m'
+    CBLUEBG = '\33[44m'
     CVIOLETBG = '\33[45m'
-    CBEIGEBG  = '\33[46m'
-    CWHITEBG  = '\33[47m'
+    CBEIGEBG = '\33[46m'
+    CWHITEBG = '\33[47m'
 
-    CGREY    = '\33[90m'
-    CRED2    = '\33[91m'
-    CGREEN2  = '\33[92m'
+    CGREY = '\33[90m'
+    CRED2 = '\33[91m'
+    CGREEN2 = '\33[92m'
     CYELLOW2 = '\33[93m'
-    CBLUE2   = '\33[94m'
+    CBLUE2 = '\33[94m'
     CVIOLET2 = '\33[95m'
-    CBEIGE2  = '\33[96m'
-    CWHITE2  = '\33[97m'
+    CBEIGE2 = '\33[96m'
+    CWHITE2 = '\33[97m'
 
-    CGREYBG    = '\33[100m'
-    CREDBG2    = '\33[101m'
-    CGREENBG2  = '\33[102m'
+    CGREYBG = '\33[100m'
+    CREDBG2 = '\33[101m'
+    CGREENBG2 = '\33[102m'
     CYELLOWBG2 = '\33[103m'
-    CBLUEBG2   = '\33[104m'
+    CBLUEBG2 = '\33[104m'
     CVIOLETBG2 = '\33[105m'
-    CBEIGEBG2  = '\33[106m'
-    CWHITEBG2  = '\33[107m'
+    CBEIGEBG2 = '\33[106m'
+    CWHITEBG2 = '\33[107m'
+
+
+if __name__ == '__main__':
+    url = get_mr_url_from_local_log("/Users/liangguanghui/Desktop/mrLog.txt")
+    print(url)
