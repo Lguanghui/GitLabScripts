@@ -278,7 +278,8 @@ class MRHelper:
                 print('')
                 sendFeishuBotMessage.send_feishubot_message(merge_request_url,
                                                             author=str(self.last_commit.author),
-                                                            message=mr_title.strip())
+                                                            message=mr_title.strip(),
+                                                            repo_name=self.get_repo_name(self.repo))
             else:
                 raise SystemExit('merge request 创建失败！')
 

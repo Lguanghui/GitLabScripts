@@ -26,7 +26,7 @@ from makeQuestion import make_question
 # print(response.text)
 
 
-def send_feishubot_message(merge_request_url: str, author: str, message: str) -> bool:
+def send_feishubot_message(merge_request_url: str, author: str, message: str, repo_name: str) -> bool:
     config = configparser.ConfigParser()
     config.read(get_root_path() + '/MRConfig.ini')
 
@@ -56,10 +56,14 @@ def send_feishubot_message(merge_request_url: str, author: str, message: str) ->
         content.append(desc_content)
 
         # content.append([{"tag": "text", "text": "commit 信息:"}])
+        repo_content: [dict] = [{"tag": "text", "text": "    - repo: "},
+                                {"tag": "text", "text": repo_name}]
         author_content: [dict] = [{"tag": "text", "text": "    - author: "},
                                   {"tag": "text", "text": author}]
         message_content: [dict] = [{"tag": "text", "text": "    - message: "},
                                    {"tag": "text", "text": message}]
+
+        content.append(repo_content)
         content.append(author_content)
         content.append(message_content)
 
