@@ -244,13 +244,19 @@ class MRHelper:
                                                      finish_message='merge request 创建完成✅',
                                                      failed_message='')
             merge_request_url = ''
-            mr_list = self.current_proj.mergerequests.list(state='opened', order_by='updated_at', get_all=True)
-            for mr in mr_list:
-                commit_list = [commit.id for commit in mr.commits()]
-                if self.last_commit.hexsha in commit_list:
-                    merge_request_url = mr.web_url
-                    mr.description = description
-                    mr.save()
+            retry_count = 0
+            while retry_count < 8 and len(merge_request_url) == 0:
+                debugPrint(f"第 {retry_count} 次尝试获取刚创建的 merge request 链接")
+                mr_list = self.current_proj.mergerequests.list(state='opened', order_by='updated_at', get_all=True)
+                for mr in mr_list:
+                    commit_list = [commit.id for commit in mr.commits()]
+                    if self.last_commit.hexsha in commit_list:
+                        merge_request_url = mr.web_url
+                        mr.description = description
+                        mr.save()
+                        break
+                time.sleep(1)
+                retry_count += 1
 
             LoadingAnimation.sharedInstance.finished = True
 
