@@ -68,12 +68,12 @@ source "$shellsPath"/Time.sh
 timestamp=$(currentTimeStamp)
 username=$(whoami)
 
-echoOrange "Start Creating New Merge Request"
+echoOrange "开始创建 merge request"
 
 if [[ `git status --porcelain` ]]; then
 #  find uncommitted Changes
-  echoRed "\033[31mFind Uncommitted Changes\033[0m"
-  echoRed "\033[31mQuit\033[0m"
+  echoRed "\033[31m发现有未提交的更改\033[0m"
+  echoRed "\033[31m流程取消\033[0m"
   exit 1
 else
 
@@ -88,7 +88,7 @@ else
 
   if [ -z "$targetBranch" ]; then
   # read target remote branch
-    echoOrange "Input Target Remote Branch (Default master): "
+    echoOrange "输入目标分支名字 (默认为 master): "
     read -r inputBranch
     if [ -z "$inputBranch" ]; then
         inputBranch="master"
@@ -99,24 +99,24 @@ else
   fi
 
 #  read request title
-  echoOrange "Input Merge Request Title (Default is the Latest Commit Message): "
+  echoOrange "输入 merge request 标题 (默认是最近一次提交的 commit message): "
   read -r mergeRequestTitle
   if [ -z "$mergeRequestTitle" ]; then
       mergeRequestTitle="$latestMessage"
   fi
 
-  echoBlue "Operating Branches"
+  echoBlue "正在操作分支"
 
 # source branch
   sourceBranch=$(git branch | sed -n -e 's/^\* \(.*\)/\1/p')
-  echoBlue "Source Branch is $sourceBranch"
+  echoBlue "源分支名字为 $sourceBranch"
 
 # creat cache branch
-  echoBlue "Creating and Switching to the Cache Branch"
+  echoBlue "正在创建并切换到临时分支"
   git checkout -b "$username/mr$timestamp" > /dev/null 2>&1
 
 #  push
-  echoBlue "Pushing to Remote"
+  echoBlue "正在将临时分支推到远端"
   merge_request=""
   git push \
     -o merge_request.create \
@@ -138,19 +138,19 @@ else
   rm -rf mrLog.txt
 
 # switch to source branch
-  echoBlue "Switching to the Source Branch"
+  echoBlue "正在切换到源分支"
   git checkout "$sourceBranch" > /dev/null 2>&1
 
 # delete cache branch
-  echoBlue "Deleting the Cache Branch"
+  echoBlue "正在删除本地临时分支"
   git branch -d "$username/mr$timestamp" > /dev/null 2>&1
 
 # output
   if [ -z "$merge_request" ]; then
-    echoRed "Error! Merge Request Created Successfully. But No Merge Request Found!"
+    echoRed "Error! Merge Request 创建成功，但是没有拿到链接，请在 Gitlab 对应仓库内查找链接"
   else
-    echoGreen "Merge Request Created Successfully!"
-    echoGreen "View Merge Request:"
+    echoGreen "Merge Request 创建成功!"
+    echoGreen "Merge Request 链接:"
     echo "${merge_request/#remote:/   }"
   fi
 
