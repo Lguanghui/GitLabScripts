@@ -76,7 +76,7 @@ createMR.sh             # 方式二
 
 1. **--init** 初始化配置
 2. **--debug** 开启 debug 模式
-3. **--fast** 强制使用 mergeRequest.sh 脚本。能够加快 mr 创建速度，但是不处理 Podfile
+3. **--fast** 强制使用 mergeRequest.sh 脚本。能够快速创建 merge request，但是不处理 Podfile
 
 ## mergeRequest 脚本
 
