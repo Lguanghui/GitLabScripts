@@ -1,5 +1,7 @@
 from termios import tcflush, TCIFLUSH
 import sys
+from Utils import Colors
+
 
 def make_question(prompt: str, expect_answers: [str] = None):
     """
@@ -13,12 +15,13 @@ def make_question(prompt: str, expect_answers: [str] = None):
     while not valid:
         # 获取输入前先清空输入缓冲区的数据，防止干扰
         tcflush(sys.stdin, TCIFLUSH)
-        answer = input(prompt)
+        answer = input(Colors.CBOLD + Colors.CGREEN + prompt + Colors.ENDC)
         if (answer in expect_answers) or len(answer) == 0 or (len(expect_answers) == 0 and len(answer) > 0):
             valid = True
             return answer \
                 if (len(answer) > 0) \
                 else (expect_answers[0] if (expect_answers is not None) and len(expect_answers) > 0 else '')
+
 
 if __name__ == '__main__':
     make_question('请输入你的性别', ['男', '女'])

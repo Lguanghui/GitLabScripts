@@ -47,7 +47,7 @@ def get_mr_url_from_local_log(log_path: str) -> MergeRequestInfo:
     """
     从本地 log 获取生成的 merge request 链接
     :param log_path: log 路径
-    :return: merge request 链接
+    :return: merge request 信息，包含链接、ID 等
     """
     mr_url = ""
     mr_id = ""
