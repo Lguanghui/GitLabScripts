@@ -18,7 +18,6 @@ required packages:
     pip3 install gitpython
 """
 
-import difflib
 import getopt
 import getpass
 import os
@@ -37,6 +36,7 @@ from Utils import debugPrint, update_debug_mode, get_mr_url_from_local_log, Merg
 from gitlab.v4.objects.projects import Project
 from gitlab.v4.objects import ProjectMergeRequest
 from pathlib import Path
+from commit_helper import CommitHelper
 
 PODFILE = 'Podfile'
 COMMIT_CONFIRM_PROMPT = '''
@@ -57,37 +57,6 @@ def get_root_path() -> str:
 def print_step(*values, sep=' ', end='\n', file=None):
     _values = ('❖',) + values
     print(*_values, sep=sep, end=end, file=file)
-
-
-class CommitHelper:
-    @classmethod
-    def get_changed_lines(cls, commit: git.Commit, file: str = PODFILE) -> [str]:
-        _changed_lines = []
-
-        # 找到跟 file 相关的文件，例如 ExamplePod/Podfile
-        relative_paths = []
-        for _diff in commit.diff(commit.parents[0]):
-            if _diff.a_blob is None:
-                continue
-            if file in _diff.a_blob.path:
-                relative_paths.append(_diff.a_blob.path)
-
-        for path in relative_paths:
-            blob = commit.tree[path].data_stream.read().decode()
-            parent_blob = commit.parents[0].tree[path].data_stream.read().decode()
-            diff = difflib.unified_diff(parent_blob.splitlines(), blob.splitlines(), lineterm='', n=0)
-            for line in diff:
-                if line.startswith('+'):
-                    _changed_lines.append(line)
-
-        return _changed_lines
-
-    @classmethod
-    def get_last_commit(cls, repo: git.Repo) -> git.Commit:
-        last_commit = repo.head.commit
-        if len(last_commit.message) == 0:
-            last_commit = last_commit.parents[0]
-        return last_commit
 
 
 class MRHelper:
@@ -139,9 +108,9 @@ class MRHelper:
         for proj in self.projects:
             # for proj in self.gitlab.projects.list(get_all=True):
             if proj.name == keyword:
-                debugPrint("从数组中找到 project")
+                debugPrint("从本地已存储数组中找到 project")
                 return proj
-        debugPrint("从数组中没有找到 project，重新拉取")
+        debugPrint("从本地已存储数组中没有找到 project，重新拉取")
         return self.gitlab.projects.list(search=keyword, get_all=True)[0]
 
     def check_has_uncommitted_changes(self) -> bool:
