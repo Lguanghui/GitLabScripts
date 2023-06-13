@@ -12,20 +12,26 @@
 >
 > 使用时如出现 SSL 等相关错误，请关闭 Charles 等代理软件对电脑端的代理（对手机端代理无影响）
 
-### 初始化配置
+### 安装依赖，配置环境
 
-#### 方式一：直接运行脚本
+将 createMR.py 所在文件夹添加到终端配置中（例如 .zshrc）：
 
-方式二和方式三需要安装 package：
+```shell
+export PATH="$PATH:/Users/liangguanghui/IdeaProjects/ShellScripts/GitShells
+```
+
+安装 package：
 
 ```shell
 pip3 install python-gitlab
 pip3 install gitpython
 ```
 
-> 建议将 createMR.py 所在文件夹添加到终端配置中（例如 .zshrc）：
-> 
-> `export PATH="$PATH:/Users/liangguanghui/IdeaProjects/ShellScripts/GitShells"`
+### 初始化配置
+
+#### 方式一：使用 python 指令直接运行脚本
+
+
 
 ```shell
 python createMR.py --init
@@ -42,7 +48,10 @@ createMR.sh --init
 # 如果遇到 zsh: permission denied: ./createMR.sh 错误。需要执行：sudo chmod 777 createMR.sh
 ```
 
-上面几种方式运行初始化配置指令后，都会在当前目录下生成一个 `MRConfig.ini` 文件，这个配置文件应该和脚本/可执行文件在同一个文件夹下。**需要将配置文件中的 token 替换为自己在 gitlab 生成的 token**。
+### 填写配置文件
+
+上面两种方式运行初始化配置指令后，都会在当前目录下生成一个 `MRConfig.ini` 文件，这个配置文件应该和脚本/可执行文件在同一个文件夹下。
+**需要将配置文件中的 token 替换为自己在 gitlab 生成的 token**。
 
 ![token](images/gitlab_token.png)
 
@@ -62,6 +71,12 @@ createMR.sh             # 方式二
 ![mr_example](images/create_mr_screen_shot.png)
 
 脚本流程与下面的 mergeRequest.sh 相似。
+
+### 脚本参数
+
+1. **--init** 初始化配置
+2. **--debug** 开启 debug 模式
+3. **--fast** 强制使用 mergeRequest.sh 脚本。能够加快 mr 创建速度，但是不处理 Podfile
 
 ## mergeRequest 脚本
 
