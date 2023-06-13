@@ -22,9 +22,16 @@ while [[ $# -gt 0 ]]; do
       shift # past value
       ;;
     -d|--debug)
+      # debug 开关
       debug="$1"
       shift # past argument
       shift # past value
+      ;;
+    -f|--fast)
+      # 使用 mergeRequest.sh，不处理 Podfile
+      fast="$1"
+      shift
+      shift
       ;;
     -*)
       echo "Unknown option $1"
@@ -39,9 +46,11 @@ done
 
 BASEDIR=$(dirname "$0")
 
-if [ -z "$init" ]; then
-  python3 "$BASEDIR/createMR.py" $debug
-else
+if [ -n "$fast" ]; then
+  mergeRequest.sh
+elif [ -n "$init" ]; then
   echo "创建配置文件中..."
-  python3 "$BASEDIR/createMR.py" --init
+    python3 "$BASEDIR/createMR.py" --init
+else
+  python3 "$BASEDIR/createMR.py" $debug
 fi
