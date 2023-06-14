@@ -144,12 +144,24 @@ class MRHelper:
                 mr_title = self.last_commit.message.split('\n')[0]
             print_step(f'message: {mr_title}')
 
+            # fetch 远端改动
+            LoadingAnimation.sharedInstance.showWith('fetch 远端分支改动中...',
+                                                     finish_message='fetch 远端改动完成✅',
+                                                     failed_message='fetch 远端改动失败❌')
+            for remote in self.repo.remotes:
+                remote.fetch(verbose=False)
+            LoadingAnimation.sharedInstance.finished = True
+
             # 获取关联 MR
             LoadingAnimation.sharedInstance.showWith('处理 Podfile, 获取相关组件库 merge request 中...',
                                                      finish_message='组件库 merge request 处理完成✅',
                                                      failed_message='组件库 merge request 处理失败❌')
             debugPrint("开始处理 Podfile")
-            file_changed_lines: [str] = CommitHelper.get_changed_lines(CommitHelper.get_last_commit(self.repo), PODFILE)
+            # 获取分支 diff
+            diff = CommitHelper.get_branches_file_diff(self.repo,
+                                                       file_name=PODFILE,
+                                                       target_branch_name=f"origin/{mr_target_br.lstrip('origin/')}")
+            file_changed_lines: [str] = CommitHelper.get_diff_changed_lines(diff)
             debugPrint("Podfile 处理完成")
             relative_pod_mrs: [str] = []
             for line in file_changed_lines:
