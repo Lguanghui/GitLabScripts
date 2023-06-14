@@ -162,7 +162,7 @@ class MRHelper:
 
     def create_merge_request(self):
         if self.check_has_uncommitted_changes():
-            raise SystemExit('⚠️有未提交的更改！')
+            raise SystemExit('⚠️ 有未提交的更改！')
         else:
             # 确认用于生成 MR 的提交
             print(COMMIT_CONFIRM_PROMPT
@@ -195,6 +195,16 @@ class MRHelper:
             for remote in self.repo.remotes:
                 remote.fetch(verbose=False)
             LoadingAnimation.sharedInstance.finished = True
+
+            # 校验目标分支是否在远端
+            target_branch_remoted: bool = False
+            for remote in self.repo.remotes:
+                for ref in remote.refs:
+                    if ref.name == f"origin/{mr_target_br.lstrip('origin/')}":
+                        target_branch_remoted = True
+                        break
+            if not target_branch_remoted:
+                raise SystemExit('⚠️ 目标分支没有 push 到远端！')
 
             # 获取关联 MR
             LoadingAnimation.sharedInstance.showWith('处理 Podfile, 获取相关组件库 merge request 中...',
