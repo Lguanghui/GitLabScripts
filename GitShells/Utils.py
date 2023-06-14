@@ -11,12 +11,17 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-
+import os
 from collections import namedtuple
 
 DEBUG_MODE = False
 
 MergeRequestInfo = namedtuple('MergeRequestInfo', ['url', 'id'])
+
+
+def print_step(*values, sep=' ', end='\n', file=None):
+    _values = ('❖',) + values
+    print(*_values, sep=sep, end=end, file=file)
 
 
 def update_debug_mode(value: bool):
@@ -60,6 +65,18 @@ def get_mr_url_from_local_log(log_path: str) -> MergeRequestInfo:
     if len(mr_url.split("/")) > 0:
         mr_id = mr_url.split("/")[-1]
     return MergeRequestInfo(mr_url, mr_id)
+
+
+def search_file_path(file_name: str) -> str:
+    """
+    在当前工作目录下搜索指定文件，输出指定文件的路径
+    :param file_name: 指定文件名
+    :return: 指定文件路径
+    """
+    for root, _, files in os.walk(os.getcwd()):
+        if file_name in files:
+            return os.path.join(root, file_name)
+    return ''
 
 
 class Colors:
@@ -118,5 +135,7 @@ class Colors:
 
 
 if __name__ == '__main__':
-    url = get_mr_url_from_local_log("/Users/liangguanghui/Desktop/mrLog.txt")
-    print(url)
+    # url = get_mr_url_from_local_log("/Users/liangguanghui/Desktop/mrLog.txt")
+    # print(url)
+    file_path = search_file_path('Podfile')
+    print(file_path)

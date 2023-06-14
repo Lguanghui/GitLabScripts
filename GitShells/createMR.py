@@ -32,7 +32,7 @@ import sendFeishuBotMessage
 from loadingAnimation import LoadingAnimation
 from makeQuestion import make_question
 from MergeRequestURLFetchThread import MergeRequestURLFetchThread
-from Utils import debugPrint, update_debug_mode, get_mr_url_from_local_log, MergeRequestInfo
+from Utils import debugPrint, update_debug_mode, get_mr_url_from_local_log, MergeRequestInfo, print_step, search_file_path
 from gitlab.v4.objects.projects import Project
 from gitlab.v4.objects import ProjectMergeRequest
 from pathlib import Path
@@ -48,15 +48,14 @@ COMMIT_CONFIRM_PROMPT = '''
 
 
 def get_root_path() -> str:
+    """
+    获取脚本库根路径
+    :return: 脚本库根路径
+    """
     if getattr(sys, 'frozen', False):
         return os.path.dirname(sys.executable)
     elif __file__:
         return os.path.dirname(__file__)
-
-
-def print_step(*values, sep=' ', end='\n', file=None):
-    _values = ('❖',) + values
-    print(*_values, sep=sep, end=end, file=file)
 
 
 class MRHelper:
@@ -103,6 +102,51 @@ class MRHelper:
     @classmethod
     def get_formatted_time(cls, seconds) -> str:
         return time.strftime('%a, %d %b %Y %H:%M', time.gmtime(seconds))
+
+    @classmethod
+    def get_commit_and_name_from_changed_line(cls, changed_line: str) -> (str, str):
+        """
+        从 changed_line 里获取组件库名称以及 commit hash
+        :param changed_line: 从 git 中获取到的变更行
+        :return: 仓库名称，commit hash
+        """
+        repo_name = ''
+        commit_hash = ''
+        processed_line = re.sub('\s+', '', changed_line).replace('\'', '"')  # 去掉空格，替换引号，方便提取
+        if "commit" in processed_line:
+            # podfile 标准写法处理。 pod "...", :git => "...", :commit => "..."
+            commit_re_result: [str] = re.findall(r":commit=>\"(.+?)\"", processed_line)
+            url_re_result: [str] = re.findall(r":git=>\"(.+?)\"", processed_line)
+            if len(commit_re_result) and len(url_re_result):
+                repo_name = url_re_result[0].split('.git')[0].split('/')[-1]
+                commit_hash = commit_re_result[0]
+                # commit_hash = helper.get_gitlab_project(repo_name).commits.get(commit_re_result[0])
+        else:
+            # podfile 函数写法处理。
+            # def ...
+            #   "..."
+            # end
+            file_path = search_file_path(PODFILE)
+            if len(file_path) > 0 and os.path.exists(file_path):
+                commit_re_result: [str] = re.findall(r"\"(.+?)\"", processed_line)
+                if len(commit_re_result) > 0:
+                    commit_hash = commit_re_result[0]
+                    pod_method = "METHOD_NOT_FOUND"
+                    with open(file_path, 'r') as f:
+                        lines: [str] = f.readlines()
+                        for (index, line) in enumerate(lines):
+                            if commit_hash in line and (index - 1) >= 0 and "def" in lines[index - 1]:
+                                pod_method = lines[index - 1].lstrip("def").replace(" ", "")
+                                break
+                    if pod_method != "METHOD_NOT_FOUND":
+                        with open(file_path, 'r') as f:
+                            for line in f.readlines():
+                                if pod_method in line:
+                                    p_line = re.sub('\s+', '', line).replace('\'', '"')
+                                    url_re_result: [str] = re.findall(r":git=>\"(.+?)\"", p_line)
+                                    if len(url_re_result):
+                                        repo_name = url_re_result[0].split('.git')[0].split('/')[-1]
+        return repo_name, commit_hash
 
     def get_gitlab_project(self, keyword: str) -> Project:
         for proj in self.projects:
@@ -166,24 +210,24 @@ class MRHelper:
             relative_pod_mrs: [str] = []
             for line in file_changed_lines:
                 line = re.sub('\s+', '', line)  # 去掉空格，方便提取
-                commit_result: [str] = re.findall(r":commit=>\"(.+?)\"", line.replace('\'', '"'))
-                url_result: [str] = re.findall(r":git=>\"(.+?)\"", line.replace('\'', '"'))
-                if len(commit_result) and len(url_result):
-                    # mr_url = helper.get_relative_mr(url_result[0], commit_result[0])
-                    repo_name = url_result[0].split('.git')[0].split('/')[-1]
+                repo_name, commit_hash = self.get_commit_and_name_from_changed_line(changed_line=line)
+                if len(repo_name) and len(commit_hash):
                     debugPrint(f"获取组件库 {repo_name} project")
                     proj = self.get_gitlab_project(repo_name)
                     debugPrint(f"组件库 {repo_name} project 获取成功")
-                    thread = MergeRequestURLFetchThread(proj, commit_result[0], self.queue)
+                    thread = MergeRequestURLFetchThread(proj, commit_hash=commit_hash, t_queue=self.queue)
                     self.mr_fetcher_threads.append(thread)
-                    # thread.start()
-                    # if mr_url is not None:
-                    #     relative_pod_mrs.append(mr_url)
-                    # else:
-                    #     # 无法获取对应的 MR 链接，直接获取 commit 的链接
-                    #     pod_repo_name = url_result[0].split('.git')[0].split('/')[-1]
-                    #     pod_commit = helper.get_gitlab_project(pod_repo_name).commits.get(commit_result[0])
-                    #     relative_pod_mrs.append(pod_commit.web_url)
+
+                # commit_result: [str] = re.findall(r":commit=>\"(.+?)\"", line.replace('\'', '"'))
+                # url_result: [str] = re.findall(r":git=>\"(.+?)\"", line.replace('\'', '"'))
+                # if len(commit_result) and len(url_result):
+                #     # mr_url = helper.get_relative_mr(url_result[0], commit_result[0])
+                #     repo_name = url_result[0].split('.git')[0].split('/')[-1]
+                #     debugPrint(f"获取组件库 {repo_name} project")
+                #     proj = self.get_gitlab_project(repo_name)
+                #     debugPrint(f"组件库 {repo_name} project 获取成功")
+                #     thread = MergeRequestURLFetchThread(proj, commit_result[0], self.queue)
+                #     self.mr_fetcher_threads.append(thread)
 
             for thread in self.mr_fetcher_threads:
                 thread.start()
@@ -233,7 +277,7 @@ class MRHelper:
             log_path = os.path.join(Path.home(), "mrLog.txt")
             if os.path.exists(log_path):
                 os.remove(log_path)
-            os.system(f'{cmd} > { log_path } 2>&1')
+            os.system(f'{cmd} > {log_path} 2>&1')
             time.sleep(1)  # 等待
             LoadingAnimation.sharedInstance.showWith('获取 merge request 并修改 description 中...',
                                                      finish_message='merge request 创建完成✅',
@@ -353,14 +397,15 @@ if __name__ == '__main__':
     helper.create_merge_request()
 
     # DEBUG
-    # changed_lines = CommitHelper.get_changed_lines(helper.last_commit, PODFILE)
-    # print(changed_lines)
+    # _diff = CommitHelper.get_branches_file_diff(helper.repo,
+    #                                             file_name=PODFILE,
+    #                                             target_branch_name=f"script_test_dev")
+    # changed_lines: [str] = CommitHelper.get_diff_changed_lines(_diff)
+    # # changed_lines = CommitHelper.get_changed_lines(helper.last_commit, PODFILE)
+    # for line in changed_lines:
+    #     print(line)
     # relative_pod_mrs: [str] = []
     # for line in changed_lines:
-    #     line = re.sub('\s+', '', line)  # 去掉空格，方便提取
-    #     commit_result: [str] = re.findall(r":commit=>\"(.+?)\"", line)
-    #     url_result: [str] = re.findall(r":git=>\"(.+?)\"", line.replace('\'', '"'))
-    #     if len(commit_result) and len(url_result):
-    #         repo_name = url_result[0].split('.git')[0].split('/')[-1]
-    #         commit = helper.get_gitlab_project(repo_name).commits.get(commit_result[0])
-    #         print(commit.web_url)
+    #     name, commit = MRHelper.get_commit_and_name_from_changed_line(line)
+    #     print(name, commit, sep=' => ')
+
