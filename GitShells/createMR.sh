@@ -46,6 +46,18 @@ done
 
 BASEDIR=$(dirname "$0")
 
+# 安装依赖
+declare -a arr=("python-gitlab" "GitPython" "pick")
+for package in "${arr[@]}"
+do
+	# echo "$package"
+	env_check=$(pip3 list | grep -F "$package")
+	if [[ -z "$env_check" ]]; then
+		echo "$package 没有安装. 安装中..."
+		pip3 install "$package"
+	fi
+done
+
 if [ -n "$fast" ]; then
   mergeRequest.sh
 elif [ -n "$init" ]; then
