@@ -18,7 +18,7 @@ import configparser
 from Utils import Colors, debugPrint
 from makeQuestion import make_question
 from config_handler import MergeRequestConfigModel, FeishuUserInfo
-from pick import pick
+import pick
 
 
 def send_feishubot_message(merge_request_url: str,
@@ -79,6 +79,8 @@ def send_feishubot_message(merge_request_url: str,
 
 
 def pick_at_userid(user_infos: [FeishuUserInfo]) -> [str]:
+    pick.SYMBOL_CIRCLE_FILLED = '✔'
+    pick.SYMBOL_CIRCLE_EMPTY = '☐'
     at_openid: [str] = []
     if len(user_infos) == 0:
         print(Colors.WARNING + "未配置 feishu_user_infos，无法 @ 指定人员" + Colors.ENDC)
@@ -95,11 +97,11 @@ def pick_at_userid(user_infos: [FeishuUserInfo]) -> [str]:
                     default_selected_index = index
                     break
 
-            selected_items = pick(options,
-                                  title,
-                                  default_index=default_selected_index,
-                                  multiselect=True,
-                                  min_selection_count=0)
+            selected_items = pick.pick(options,
+                                       title,
+                                       default_index=default_selected_index,
+                                       multiselect=True,
+                                       min_selection_count=0)
 
             selected_ids = list(map(lambda x: user_infos[x[1]].feishu_openid, selected_items))
             debugPrint('当前选中 ', selected_ids)
