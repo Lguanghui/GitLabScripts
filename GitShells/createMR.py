@@ -29,6 +29,8 @@ import git
 import gitlab
 import configparser
 import sendFeishuBotMessage
+import config_handler
+import shutil
 from loadingAnimation import LoadingAnimation
 from makeQuestion import make_question
 from MergeRequestURLFetchThread import MergeRequestURLFetchThread
@@ -37,6 +39,8 @@ from gitlab.v4.objects.projects import Project
 from gitlab.v4.objects import ProjectMergeRequest
 from pathlib import Path
 from commit_helper import CommitHelper
+from Utils import get_root_path
+from config_handler import MergeRequestConfigModel
 
 PODFILE = 'Podfile'
 COMMIT_CONFIRM_PROMPT = '''
@@ -47,20 +51,10 @@ COMMIT_CONFIRM_PROMPT = '''
 '''
 
 
-def get_root_path() -> str:
-    """
-    获取脚本库根路径
-    :return: 脚本库根路径
-    """
-    if getattr(sys, 'frozen', False):
-        return os.path.dirname(sys.executable)
-    elif __file__:
-        return os.path.dirname(__file__)
-
-
 class MRHelper:
     def __init__(self):
         self.gitlab = gitlab.Gitlab.from_config('Keep', [get_root_path() + '/MRConfig.ini'])
+        self.config_model: MergeRequestConfigModel = config_handler.get_config_model()
         self.projects: [Project] = self.gitlab.projects.list(get_all=True)
         self.repo = git.Repo(os.getcwd(), search_parent_directories=True)
         self.current_proj = self.get_gitlab_project(self.get_repo_name(self.repo))
@@ -335,12 +329,13 @@ class MRHelper:
                 sendFeishuBotMessage.send_feishubot_message(merge_request_url,
                                                             author=str(self.last_commit.author),
                                                             message=mr_title.strip(),
-                                                            repo_name=self.get_repo_name(self.repo))
+                                                            repo_name=self.get_repo_name(self.repo),
+                                                            config=self.config_model)
             else:
                 raise SystemExit('merge request 创建失败！')
 
 
-def get_config_new_value(key: str, section: str, config: configparser.ConfigParser) -> str:
+def get_config_new_value(key: str, section: str, config: configparser.ConfigParser):
     if key in config[section] and len(config[section][key]) > 0:
         return config[section][key]
     else:
@@ -348,6 +343,11 @@ def get_config_new_value(key: str, section: str, config: configparser.ConfigPars
 
 
 def create_config_file():
+    config_path = get_root_path() + '/config.json'
+    config_example_path = get_root_path() + '/config_example.json'
+    if not os.path.exists(config_path) and os.path.exists(config_example_path):
+        shutil.copyfile(config_example_path, config_path)
+
     path = get_root_path() + '/MRConfig.ini'
     if os.path.exists(path):
         current_config = configparser.ConfigParser()
@@ -356,16 +356,9 @@ def create_config_file():
         current_config[section]['url'] = 'https://gitlab.gotokeep.com'
         current_config[section]['private_token'] = get_config_new_value('private_token', section, current_config)
         current_config[section]['api_version'] = '4'
-        current_config[section]['send_feishubot_message'] = get_config_new_value('send_feishubot_message', section,
-                                                                                 current_config)
-        current_config[section]['feishu_bot_webhook'] = get_config_new_value('feishu_bot_webhook', section,
-                                                                             current_config)
-        current_config[section]['feishu_bot_@_user_openid'] = get_config_new_value('feishu_bot_@_user_openid', section,
-                                                                                   current_config)
-        current_config[section]['feishu_bot_self_openid'] = get_config_new_value('feishu_bot_self_openid', section,
-                                                                                 current_config)
         with open(path, 'w') as configfile:
             current_config.write(configfile)
+
     else:
         f = open(get_root_path() + '/MRConfig.ini', 'w')
         f.seek(0)
@@ -375,10 +368,6 @@ def create_config_file():
 url = https://gitlab.gotokeep.com
 private_token = *****
 api_version = 4
-send_feishubot_message = no
-feishu_bot_webhook = 
-feishu_bot_@_user_openid = 
-feishu_bot_self_openid = 
             """.strip())
         f.close()
     raise SystemExit('配置文件创建成功')

@@ -47,11 +47,11 @@ done
 BASEDIR=$(dirname "$0")
 
 # 安装依赖
-declare -a arr=("python-gitlab" "GitPython" "pick")
+declare -a arr=("python-gitlab" "GitPython" "pick" "dacite")
 for package in "${arr[@]}"
 do
 	# echo "$package"
-	env_check=$(pip3 list | grep -F "$package")
+	env_check=$(pip3 --disable-pip-version-check list | grep -F "$package")
 	if [[ -z "$env_check" ]]; then
 		echo "$package 没有安装. 安装中..."
 		pip3 install "$package"

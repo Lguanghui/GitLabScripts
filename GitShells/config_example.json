@@ -1,0 +1,15 @@
+{
+  "send_feishubot_message": true,
+  "feishu_bot_webhook": "xxx",
+  "feishu_user_infos": [
+    {
+      "name": "小明",
+      "feishu_openid": "xxx",
+      "default_selected": true
+    },
+    {
+      "name": "小红",
+      "feishu_openid": "xxx"
+    }
+  ]
+}

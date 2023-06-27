@@ -5,3 +5,4 @@
 /GitShells/createMR.build
 /GitShells/MRConfig.ini
 *.pyc
+/GitShells/config.json

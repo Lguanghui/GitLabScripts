@@ -15,33 +15,29 @@
 import requests
 import json
 import configparser
-from createMR import get_root_path
+from Utils import Colors, debugPrint
 from makeQuestion import make_question
+from config_handler import MergeRequestConfigModel, FeishuUserInfo
+from pick import pick
 
 
-# url = "https://open.feishu.cn/open-apis/bot/v2/hook/2f7e2c1c-cd18-4663-85a4-f0bf3c548c63"
-# headers = {"Content-Type": "application/json"}
-# body = json.dumps({"msg_type": "text","content": {"text": "text<at user_id = \"6978667324467331100\">梁光辉</at>merge request text content 要处理"}})
-# response = requests.request("POST", url, headers=headers, data=body)
-# print(response.text)
-
-
-def send_feishubot_message(merge_request_url: str, author: str, message: str, repo_name: str) -> bool:
-    config = configparser.ConfigParser()
-    config.read(get_root_path() + '/MRConfig.ini')
+def send_feishubot_message(merge_request_url: str,
+                           author: str,
+                           message: str,
+                           repo_name: str,
+                           config: MergeRequestConfigModel) -> bool:
 
     answer = make_question('是否让机器人发送 merge request 通知 y/n(回车默认不发送): ', ['n', 'y'])
     if answer == 'n':
         return False
 
-    if len(config.sections()) == 0:
+    if config is None:
         SystemExit('配置文件为空')
         return False
-    section = config[config.sections()[0]]
-    send_message = section.get('send_feishubot_message')
-    webhook = section.get('feishu_bot_webhook')
-    at_openid = section.get('feishu_bot_@_user_openid')
-    if not send_message or len(webhook) == 0:
+
+    at_openids: [str] = pick_at_userid(user_infos=config.feishu_user_infos)
+
+    if config.send_feishubot_message is False or len(config.feishu_bot_webhook) == 0:
         SystemExit('未开启发送机器人通知选项或未填写 webhook 链接')
         return False
     else:
@@ -50,8 +46,9 @@ def send_feishubot_message(merge_request_url: str, author: str, message: str, re
         content: [[dict]] = []  # 注意，这里面的元素必须是数组，一个元素代表一个段落
 
         desc_content: [dict] = []
-        if len(at_openid) > 0:
-            desc_content.append({"tag": "at", "user_id": at_openid})
+        if len(at_openids) > 0:
+            for openid in at_openids:
+                desc_content.append({"tag": "at", "user_id": openid})
         desc_content.append({"tag": "text", "text": " 您有一条 merge request 待处理🚀🚀🚀"})
         content.append(desc_content)
 
@@ -71,14 +68,52 @@ def send_feishubot_message(merge_request_url: str, author: str, message: str, re
 
         body = json.dumps({"msg_type": "post", "content": {
             "post": {"zh_cn": {"title": "待处理 merge request 通知", "content": content}}}})
-        # print(body)
-        response = requests.request("POST", webhook, headers=headers, data=body)
-        if response.status_code == 0:
+        # debugPrint(body)
+        response = requests.request("POST", config.feishu_bot_webhook, headers=headers, data=body)
+        debugPrint('status code: ', response.status_code)
+        if response.status_code == 200 or response.status_code == 0:
             print('机器人通知发送成功！🎉')
             return True
         else:
             return False
 
 
+def pick_at_userid(user_infos: [FeishuUserInfo]) -> [str]:
+    at_openid: [str] = []
+    if len(user_infos) == 0:
+        print(Colors.WARNING + "未配置 feishu_user_infos，无法 @ 指定人员" + Colors.ENDC)
+    else:
+        if len(user_infos) == 1 and user_infos[0].default_selected is True:
+            at_openid.append(user_infos[0].feishu_openid)
+        else:
+            title = '请选择需要 @ 的人员 (按「空格键」选中, 按「回车键」结束选择): '
+            options = [user.name for user in user_infos]
+            # default_selected_index = next(user for user in user_infos if user.default_selected is True)
+            default_selected_index = 0
+            for (index, user) in enumerate(user_infos):
+                if user.default_selected is True:
+                    default_selected_index = index
+                    break
+
+            selected_items = pick(options,
+                                  title,
+                                  default_index=default_selected_index,
+                                  multiselect=True,
+                                  min_selection_count=0)
+
+            selected_ids = list(map(lambda x: user_infos[x[1]].feishu_openid, selected_items))
+            debugPrint('当前选中 ', selected_ids)
+            return selected_ids
+
+
 if __name__ == '__main__':
-    send_feishubot_message(merge_request_url='https://www.baidu.com', author='xiaoliang', message='message')
+    # send_feishubot_message(merge_request_url='https://www.baidu.com', author='xiaoliang', message='message')
+    _config = configparser.ConfigParser()
+    _config.read('./MRConfig.ini')
+    _section = _config[_config.sections()[0]]
+    dict_data = _section.get("feishu_user_infos")
+    print(type(dict_data))
+    dict_data = eval(dict_data)
+    print(type(dict_data))
+    print(dict_data)
+    print(type(dict_data[0]['default_selected']))

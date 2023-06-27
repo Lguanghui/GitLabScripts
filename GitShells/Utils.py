@@ -11,12 +11,23 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-import os
+import os, sys
 from collections import namedtuple
 
 DEBUG_MODE = False
 
 MergeRequestInfo = namedtuple('MergeRequestInfo', ['url', 'id'])
+
+
+def get_root_path() -> str:
+    """
+    获取脚本库根路径
+    :return: 脚本库根路径
+    """
+    if getattr(sys, 'frozen', False):
+        return os.path.dirname(sys.executable)
+    elif __file__:
+        return os.path.dirname(__file__)
 
 
 def print_step(*values, sep=' ', end='\n', file=None):
