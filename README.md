@@ -4,6 +4,10 @@
 
 [👉 mergeRequest](https://gitlab.com/Lguanghui/ShellScripts#mergerequest-%E8%84%9A%E6%9C%AC)
 
+`createMR.sh` 是功能比较完善的脚本，支持处理 Podfile 的改动，建议作为主力使用。
+
+`mergeRequest.sh` 是初级脚本，不会处理 Podfile 的改动，但速度比较快，建议仅在组件库内生成 merge request 时使用。
+
 ## createMR 脚本
 
 > **⚠️ 需要 python 版本 >= 3.10**
