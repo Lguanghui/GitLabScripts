@@ -21,7 +21,7 @@
 将 createMR.py 所在文件夹添加到终端配置中（例如 .zshrc）：
 
 ```shell
-export PATH="$PATH:/Users/liangguanghui/IdeaProjects/ShellScripts/GitShells
+export PATH="$PATH:/Users/liangguanghui/IdeaProjects/ShellScripts/GitShells"
 ```
 
 安装 package：
