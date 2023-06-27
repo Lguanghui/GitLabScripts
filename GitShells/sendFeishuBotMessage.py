@@ -79,8 +79,10 @@ def send_feishubot_message(merge_request_url: str,
 
 
 def pick_at_userid(user_infos: [FeishuUserInfo]) -> [str]:
-    pick.SYMBOL_CIRCLE_FILLED = '✔'
-    pick.SYMBOL_CIRCLE_EMPTY = '☐'
+    # pick.SYMBOL_CIRCLE_FILLED = '✔'
+    # pick.SYMBOL_CIRCLE_EMPTY = '☐'
+    pick.SYMBOL_CIRCLE_FILLED = '●'
+    pick.SYMBOL_CIRCLE_EMPTY = '○'
     at_openid: [str] = []
     if len(user_infos) == 0:
         print(Colors.WARNING + "未配置 feishu_user_infos，无法 @ 指定人员" + Colors.ENDC)

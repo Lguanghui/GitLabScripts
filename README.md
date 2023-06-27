@@ -25,19 +25,13 @@ export PATH="$PATH:/Users/liangguanghui/IdeaProjects/ShellScripts/GitShells
 ```shell
 pip3 install python-gitlab
 pip3 install gitpython
+...
+# 新版本中会自动安装所需依赖
 ```
 
 ### 初始化配置
 
-#### 方式一：使用 python 指令直接运行脚本
-
-
-
-```shell
-python createMR.py --init
-```
-
-#### 方式二：运行 shell 脚本（推荐）
+### 运行 shell 脚本
 
 > 将 createMR.sh 及 createMR.py 所在文件夹添加到终端配置中（例如 .zshrc）：
 > 
@@ -50,20 +44,20 @@ createMR.sh --init
 
 ### 填写配置文件
 
-上面两种方式运行初始化配置指令后，都会在当前目录下生成一个 `MRConfig.ini` 文件，这个配置文件应该和脚本/可执行文件在同一个文件夹下。
-**需要将配置文件中的 token 替换为自己在 gitlab 生成的 token**。
+上面运行初始化配置指令后，都会在当前目录下生成一个 `MRConfig.ini` 以及一个 `config.json` 文件。这两个配置文件应该和脚本/可执行文件在同一个文件夹下。
+
+在 `MRConfig.ini` 文件中**需要将配置文件中的 token 替换为自己在 gitlab 生成的 token**。
 
 ![token](images/gitlab_token.png)
 
-如果需要发送飞书机器人消息的话，还需要配置机器人 webhook 地址、被@用户的飞书 ID。获取飞书用户 ID 的方法参见 https://www.cnblogs.com/mxcl/p/16359730.html，并设置 `send_feishubot_message` 为 yes
+如果需要发送飞书机器人消息的话，还需要在 `config.json` 文件中配置机器人 webhook 地址、被@用户的飞书 ID。获取飞书用户 ID 的方法参见 https://www.cnblogs.com/mxcl/p/16359730.html，并设置 `send_feishubot_message` 为 yes
 
 ### 生成 merge request
 
-和生成配置类似，生成 merge request 也有相应的两种方式，只不过需要把 `--init` 参数去掉。例如：
+运行指令：
 
 ```shell
-python3 createMR.py     # 方式一
-createMR.sh             # 方式二
+createMR.sh
 ```
 
 样图：
