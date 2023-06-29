@@ -86,9 +86,12 @@ def pick_at_userid(user_infos: [FeishuUserInfo]) -> [str]:
     at_openid: [str] = []
     if len(user_infos) == 0:
         print(Colors.WARNING + "未配置 feishu_user_infos，无法 @ 指定人员" + Colors.ENDC)
+        return at_openid
     else:
         if len(user_infos) == 1 and user_infos[0].default_selected is True:
             at_openid.append(user_infos[0].feishu_openid)
+            debugPrint('当前仅配置了一个艾特人员，且默认选中')
+            return at_openid
         else:
             title = '请选择需要 @ 的人员 (按「空格键」选中, 按「回车键」结束选择): '
             options = [user.name for user in user_infos]
@@ -105,9 +108,9 @@ def pick_at_userid(user_infos: [FeishuUserInfo]) -> [str]:
                                        multiselect=True,
                                        min_selection_count=0)
 
-            selected_ids = list(map(lambda x: user_infos[x[1]].feishu_openid, selected_items))
-            debugPrint('当前选中 ', selected_ids)
-            return selected_ids
+            at_openid = list(map(lambda x: user_infos[x[1]].feishu_openid, selected_items))
+            debugPrint('当前选中 ', at_openid)
+            return at_openid
 
 
 if __name__ == '__main__':

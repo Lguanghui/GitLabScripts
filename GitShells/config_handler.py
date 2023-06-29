@@ -11,7 +11,7 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-
+import os
 from dataclasses import dataclass, field
 from dacite import from_dict
 from configparser import ConfigParser
@@ -45,7 +45,11 @@ class MergeRequestConfigModel:
 
 
 def get_config_model() -> MergeRequestConfigModel:
-    with open(get_root_path() + '/config.json') as f:
+    file_path = get_root_path() + '/config.json'
+    if not os.path.exists(file_path):
+        raise SystemExit('⚠️ config.json 文件不存在。请先执行 createMR.sh --init')
+
+    with open(file_path) as f:
         data = json.load(f)
         model = from_dict(MergeRequestConfigModel, data)
         return model
