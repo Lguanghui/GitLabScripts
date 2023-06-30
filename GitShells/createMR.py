@@ -191,10 +191,11 @@ class MRHelper:
             LoadingAnimation.sharedInstance.finished = True
 
             # 校验目标分支是否在远端
+            mr_target_br = mr_target_br.replace('origin/', '')
             target_branch_remoted: bool = False
             for remote in self.repo.remotes:
                 for ref in remote.refs:
-                    if ref.name == f"origin/{mr_target_br.lstrip('origin/')}":
+                    if ref.name == f"origin/{mr_target_br}":
                         target_branch_remoted = True
                         break
             if not target_branch_remoted:
@@ -208,7 +209,7 @@ class MRHelper:
             # 获取分支 diff
             diff = CommitHelper.get_branches_file_diff(self.repo,
                                                        file_name=PODFILE,
-                                                       target_branch_name=f"origin/{mr_target_br.lstrip('origin/')}")
+                                                       target_branch_name=f"origin/{mr_target_br}")
             file_changed_lines: [str] = CommitHelper.get_diff_changed_lines(diff)
             debugPrint("Podfile 处理完成")
             relative_pod_mrs: [str] = []
