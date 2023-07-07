@@ -1,6 +1,7 @@
 from termios import tcflush, TCIFLUSH
 import sys
 from Utils import Colors
+import readline
 
 
 def make_question(prompt: str, expect_answers: [str] = None):
