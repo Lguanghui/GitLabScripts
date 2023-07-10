@@ -201,14 +201,6 @@ class MRHelper:
             if not target_branch_remoted:
                 raise SystemExit('⚠️ 目标分支没有 push 到远端！')
 
-            # rebase 远端分支
-            debugPrint('开始对分支进行 rebase')
-            LoadingAnimation.sharedInstance.showWith('rebase 远端分支中...',
-                                                     finish_message='rebase 完成✅',
-                                                     failed_message='rebase 失败❌')
-            os.system(f'git rebase origin/{mr_target_br} > /dev/null 2>&1')
-            LoadingAnimation.sharedInstance.finished = True
-
             # 获取关联 MR
             LoadingAnimation.sharedInstance.showWith('处理 Podfile, 获取相关组件库 merge request 中...',
                                                      finish_message='组件库 merge request 处理完成✅',
