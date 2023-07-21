@@ -130,7 +130,8 @@ class MRHelper:
                         lines: [str] = f.readlines()
                         for (index, line) in enumerate(lines):
                             if commit_hash in line and (index - 1) >= 0 and "def" in lines[index - 1]:
-                                pod_method = lines[index - 1].lstrip("def").replace(" ", "")
+                                # 需要加上 strip 去掉最后的换行符
+                                pod_method = lines[index - 1].replace("def", "").replace(" ", "").strip()
                                 break
                     if pod_method != "METHOD_NOT_FOUND":
                         with open(file_path, 'r') as f:
@@ -140,6 +141,7 @@ class MRHelper:
                                     url_re_result: [str] = re.findall(r":git=>\"(.+?)\"", p_line)
                                     if len(url_re_result):
                                         repo_name = url_re_result[0].split('.git')[0].split('/')[-1]
+                                        break
         return repo_name, commit_hash
 
     def get_gitlab_project(self, keyword: str) -> Project:
