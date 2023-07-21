@@ -233,17 +233,6 @@ class MRHelper:
                     thread = MergeRequestURLFetchThread(proj, commit_hash=commit_hash, t_queue=self.queue)
                     self.mr_fetcher_threads.append(thread)
 
-                # commit_result: [str] = re.findall(r":commit=>\"(.+?)\"", line.replace('\'', '"'))
-                # url_result: [str] = re.findall(r":git=>\"(.+?)\"", line.replace('\'', '"'))
-                # if len(commit_result) and len(url_result):
-                #     # mr_url = helper.get_relative_mr(url_result[0], commit_result[0])
-                #     repo_name = url_result[0].split('.git')[0].split('/')[-1]
-                #     debugPrint(f"获取组件库 {repo_name} project")
-                #     proj = self.get_gitlab_project(repo_name)
-                #     debugPrint(f"组件库 {repo_name} project 获取成功")
-                #     thread = MergeRequestURLFetchThread(proj, commit_result[0], self.queue)
-                #     self.mr_fetcher_threads.append(thread)
-
             for thread in self.mr_fetcher_threads:
                 thread.start()
 
