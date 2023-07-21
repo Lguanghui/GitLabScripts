@@ -16,7 +16,7 @@
 >
 > 使用时如出现 SSL 等相关错误，请关闭 Charles 等代理软件对电脑端的代理（对手机端代理无影响）
 
-### 安装依赖，配置环境
+### 添加终端环境变量
 
 将 createMR.py 所在文件夹添加到终端配置中（例如 .zshrc）：
 
@@ -24,29 +24,16 @@
 export PATH="$PATH:/Users/liangguanghui/IdeaProjects/ShellScripts/GitShells"
 ```
 
-安装 package：
-
-```shell
-pip3 install python-gitlab
-pip3 install gitpython
-...
-# 新版本中会自动安装所需依赖
-```
-
 ### 初始化配置
 
-### 运行 shell 脚本
-
-> 将 createMR.sh 及 createMR.py 所在文件夹添加到终端配置中（例如 .zshrc）：
-> 
-> `export PATH="$PATH:/Users/liangguanghui/IdeaProjects/ShellScripts/GitShells"`
+#### 运行初始化指令
 
 ```shell
 createMR.sh --init
 # 如果遇到 zsh: permission denied: ./createMR.sh 错误。需要执行：sudo chmod 777 createMR.sh
 ```
 
-### 填写配置文件
+#### 填写配置文件
 
 上面运行初始化配置指令后，都会在当前目录下生成一个 `MRConfig.ini` 以及一个 `config.json` 文件。这两个配置文件应该和脚本/可执行文件在同一个文件夹下。
 
