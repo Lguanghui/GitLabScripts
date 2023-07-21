@@ -64,5 +64,7 @@ elif [ -n "$init" ]; then
   echo "创建配置文件中..."
     python3 "$BASEDIR/createMR.py" --init
 else
-  python3 "$BASEDIR/createMR.py" $debug
+  python3 "$BASEDIR/createMR.py" "$debug"
 fi
+
+repo_update_check.sh

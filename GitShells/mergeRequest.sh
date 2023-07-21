@@ -155,3 +155,5 @@ else
   fi
 
 fi
+
+repo_update_check.sh
