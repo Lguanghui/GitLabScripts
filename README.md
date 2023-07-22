@@ -69,6 +69,8 @@ createMR.sh
 
 提交改动时，使用者可以在组件库最新提交的 message 中选择一个作为本次改动提交的 message，当然也可以自己编写 message。
 
+![gif](images/20230722184206.gif)
+
 ### 脚本参数
 
 1. **--init** 初始化配置
