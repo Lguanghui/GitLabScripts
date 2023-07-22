@@ -57,11 +57,24 @@ createMR.sh
 
 脚本流程与下面的 mergeRequest.sh 相似。
 
+### 懒人模式
+
+懒人模式下，脚本会自动检索 Podfile 中可以更新 commit 的组件库。
+
+如果某个组件库主分支最近一次的提交在 7 天内，且这个提交的 hash 并不是 Podfile 中使用的 hash，那么这个组件库会被列入候选列表中。
+
+脚本使用者可以在候选列表中选择自己想要更新的组件库。
+
+组件库确认后，脚本会将 Podfile 中这些组件库的 commit hash 更新为最新提交的 hash。并自动提交 Podfile 改动。
+
+提交改动时，使用者可以在组件库最新提交的 message 中选择一个作为本次改动提交的 message，当然也可以自己编写 message。
+
 ### 脚本参数
 
 1. **--init** 初始化配置
 2. **--debug** 开启 debug 模式
 3. **--fast** 强制使用 mergeRequest.sh 脚本。能够快速创建 merge request，但是不处理 Podfile
+4. **--lazy** 懒人模式。自动检索可以更新 commit 的组件库，并自动修改 Podfile。
 
 ## mergeRequest 脚本
 

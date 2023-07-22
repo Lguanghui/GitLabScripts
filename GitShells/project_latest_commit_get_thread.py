@@ -58,7 +58,7 @@ class ProjectLatestCommitGetThread(threading.Thread):
         debugPrint(f"project { self.project_name } 开始获取最新 commit")
         debugPrint(f"当前线程：{ threading.current_thread().name } project: {self.project_name}")
         since_time = (dt.date.today() - dt.timedelta(days=7)).isoformat()
-        commits = self.proj.commits.list(since=since_time)
+        commits = self.proj.commits.list(since=since_time, get_all=False)
         if len(commits) > 0:
             latest_commit = commits[0]
             latest_commit_hash: str = latest_commit.id
