@@ -150,7 +150,7 @@ class MRHelper:
             if proj.name == keyword:
                 debugPrint("从本地已存储数组中找到 project")
                 return proj
-        debugPrint("从本地已存储数组中没有找到 project，重新拉取")
+        debugPrint(f"从本地已存储数组中没有找到 project { keyword }，重新拉取")
         return self.gitlab.projects.list(search=keyword, get_all=True)[0]
 
     def check_has_uncommitted_changes(self) -> bool:
@@ -374,13 +374,20 @@ api_version = 4
 
 
 if __name__ == '__main__':
-    # 创建配置文件
-    opts, args = getopt.getopt(sys.argv, "", ["--init", "--debug"])
+    opts, args = getopt.getopt(sys.argv, "", ["--init", "--debug", "--lazy"])
+
+    lazy_mode: bool = False
+
     if '--init' in args:
+        # 创建配置文件
         create_config_file()
     if '--debug' in args:
         update_debug_mode(True)
         debugPrint('当前是 DEBUG 模式')
+    if '--lazy' in args:
+        from Utils import Colors
+        print(Colors.CBOLD + Colors.CGREEN + "当前是懒人模式，自动检测并更新组件库最新 commit（7 天内）" + Colors.ENDC)
+        lazy_mode = True
 
     # 创建 merge request
     LoadingAnimation.sharedInstance.showWith('获取仓库配置中，需要联网，请耐心等待...',
@@ -393,7 +400,12 @@ if __name__ == '__main__':
         debugPrint(e)
         raise SystemExit()
     LoadingAnimation.sharedInstance.finished = True
-    helper.create_merge_request()
+    if lazy_mode:
+        # todo: liangguanghui 要 rebase 分支
+        from createMR_lazy import do_lazy_create
+        do_lazy_create(helper)
+    else:
+        helper.create_merge_request()
 
     # DEBUG
     # _diff = CommitHelper.get_branches_file_diff(helper.repo,

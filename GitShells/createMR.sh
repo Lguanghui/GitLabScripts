@@ -19,19 +19,25 @@ while [[ $# -gt 0 ]]; do
     -i|--init)
       init="$1"
       shift # past argument
-      shift # past value
+#      shift # past value
       ;;
     -d|--debug)
       # debug 开关
       debug="$1"
       shift # past argument
-      shift # past value
+#      shift # past value
       ;;
     -f|--fast)
       # 使用 mergeRequest.sh，不处理 Podfile
       fast="$1"
       shift
+#      shift
+      ;;
+    -l|--lazy)
+      # 懒人模式，自动检测所有可以更新的组件库
+      lazy="$1"
       shift
+#      shift
       ;;
     -*)
       echo "Unknown option $1"
@@ -47,7 +53,7 @@ done
 BASEDIR=$(dirname "$0")
 
 # 安装依赖
-declare -a arr=("python-gitlab" "GitPython" "pick" "dacite")
+declare -a arr=("python-gitlab" "GitPython" "pick" "dacite" "numpy")
 for package in "${arr[@]}"
 do
 	# echo "$package"
@@ -64,7 +70,7 @@ elif [ -n "$init" ]; then
   echo "创建配置文件中..."
     python3 "$BASEDIR/createMR.py" --init
 else
-  python3 "$BASEDIR/createMR.py" "$debug"
+  python3 "$BASEDIR/createMR.py" "$debug" "$lazy"
 fi
 
 repo_update_check.sh
