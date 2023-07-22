@@ -131,7 +131,7 @@ def commit_podfile_changes(helper: MRHelper, messages: [str]):
         options: [str] = messages
         custom_message: str = "没有想要的，我要自己写 message"
         options.append(custom_message)
-        title = '请选择提交本次 Podfile 自动更新使用的 message(「空格键」选中, 「回车键」结束选择): '
+        title = '请选择提交本次 Podfile 自动更新使用的 message(「回车键」选择): '
         message, index = pick.pick(options,
                                    title,
                                    default_index=0,
