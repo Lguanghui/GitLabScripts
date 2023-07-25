@@ -292,9 +292,26 @@ class MRHelper:
             if len(mr_info_from_local.url) > 0 and len(mr_info_from_local.id) > 0:
                 debugPrint(f"从本地 log 中拿到 merge request url: {mr_info_from_local.url}")
                 merge_request_url = mr_info_from_local.url
-                merge_request: ProjectMergeRequest = self.current_proj.mergerequests.get(mr_info_from_local.id)
-                merge_request.description = description
-                merge_request.save()
+                try:
+                    merge_request: ProjectMergeRequest = self.current_proj.mergerequests.get(mr_info_from_local.id)
+                    merge_request.description = description
+                    merge_request.save()
+                except Exception as err:
+                    debugPrint(err)
+                    debugPrint(f"使用本地 mr id { mr_info_from_local.id } 没有拿到 merge request，尝试延迟重试")
+                    retry_count = 0
+                    found: bool = False
+                    while retry_count < 8 and not found:
+                        debugPrint(f"第 {retry_count} 次尝试获取刚创建的 merge request 链接")
+                        mr_list = self.current_proj.mergerequests.list(state='opened', order_by='updated_at', get_all=True)
+                        for mr in mr_list:
+                            if merge_request_url == mr.web_url:
+                                mr.description = description
+                                mr.save()
+                                found = True
+                                break
+                        time.sleep(1)
+                        retry_count += 1
             else:
                 retry_count = 0
                 while retry_count < 8 and len(merge_request_url) == 0:
