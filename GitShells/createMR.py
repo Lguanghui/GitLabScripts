@@ -64,11 +64,13 @@ class MRHelper:
 
     @classmethod
     def get_repo_name(cls, repo: git.Repo) -> str:
-        local_name = repo.working_tree_dir.split('/')[-1]
         url_name = repo.remotes.origin.url.split('.git')[0].split('/')[-1]
         if len(url_name) > 0:
+            debugPrint(f"从仓库 url 中获取到仓库名字: { url_name }")
             return url_name
         else:
+            local_name = repo.working_tree_dir.split('/')[-1]
+            debugPrint(f"从仓库 url 中没有获取到仓库名字，返回本地文件夹名: { local_name }")
             return local_name
 
     def get_relative_mr(self, repo_url: str, commit: str) -> str | None:
@@ -148,7 +150,7 @@ class MRHelper:
         for proj in self.projects:
             # for proj in self.gitlab.projects.list(get_all=True):
             if proj.name == keyword:
-                debugPrint("从本地已存储数组中找到 project")
+                debugPrint(f"从本地已存储数组中找到 project { keyword }")
                 return proj
         debugPrint(f"从本地已存储数组中没有找到 project { keyword }，重新拉取")
         return self.gitlab.projects.list(search=keyword, get_all=True)[0]
@@ -294,6 +296,7 @@ class MRHelper:
                 merge_request_url = mr_info_from_local.url
                 try:
                     merge_request: ProjectMergeRequest = self.current_proj.mergerequests.get(mr_info_from_local.id)
+                    debugPrint(f"从本地 log 中拿到 url: { merge_request.web_url }, id: { mr_info_from_local.id }")
                     merge_request.description = description
                     merge_request.save()
                 except Exception as err:
@@ -303,9 +306,13 @@ class MRHelper:
                     found: bool = False
                     while retry_count < 8 and not found:
                         debugPrint(f"第 {retry_count} 次尝试获取刚创建的 merge request 链接")
-                        mr_list = self.current_proj.mergerequests.list(state='opened', order_by='updated_at', get_all=True)
+                        mr_list = self.current_proj.mergerequests.list(state='opened',
+                                                                       order_by='updated_at',
+                                                                       get_all=True)
                         for mr in mr_list:
-                            if merge_request_url == mr.web_url:
+                            debugPrint(f"比对 merge request: { str(mr.web_url) }")
+                            if merge_request_url == str(mr.web_url):
+                                debugPrint("merge request 比对成功，修改 description")
                                 mr.description = description
                                 mr.save()
                                 found = True
