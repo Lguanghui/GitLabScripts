@@ -84,6 +84,8 @@ def pick_wanted_projects(helper: MRHelper) -> [ProjectLatestCommitModel]:
             helper.queue.put(item)
 
     debugPrint("所有可以更新", need_update_models)
+    if len(need_update_models) == 0:
+        raise SystemExit("当前没有可更新的组件库")
 
     # 询问用户
     pick.SYMBOL_CIRCLE_FILLED = '●'
