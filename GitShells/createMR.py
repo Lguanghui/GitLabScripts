@@ -97,7 +97,7 @@ class MRHelper:
 
     @classmethod
     def get_formatted_time(cls, seconds) -> str:
-        return time.strftime('%a, %d %b %Y %H:%M', time.gmtime(seconds))
+        return time.strftime('%a, %d %b %Y %H:%M', time.localtime(seconds))
 
     @classmethod
     def get_commit_and_name_from_changed_line(cls, changed_line: str) -> (str, str):
