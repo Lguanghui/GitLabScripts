@@ -12,13 +12,14 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-from createMR import MRHelper, search_file_path, PODFILE, CommitHelper
-import pick
-from Utils import debugPrint
-from project_latest_commit_get_thread import ProjectLatestCommitModel, ProjectLatestCommitGetThread
-from loadingAnimation import LoadingAnimation
 import numpy as np
+import pick
+import re
+from Utils import debugPrint
+from createMR import MRHelper, search_file_path, PODFILE, CommitHelper
+from loadingAnimation import LoadingAnimation
 from makeQuestion import make_question
+from project_latest_commit_get_thread import ProjectLatestCommitModel, ProjectLatestCommitGetThread
 
 
 def do_lazy_create(helper: MRHelper):
@@ -41,6 +42,7 @@ def update_all_project_commit(helper: MRHelper) -> [ProjectLatestCommitModel]:
     with open(file_path, 'r') as f:
         lines: [str] = f.readlines()
         for line in lines:
+            line = re.sub('\s+', '', line)
             project_name, current_commit = helper.get_commit_and_name_from_changed_line(line)
             if len(project_name) and len(current_commit) and ("gotokeep" in line):
                 thread = ProjectLatestCommitGetThread(proj=helper.get_gitlab_project(project_name),

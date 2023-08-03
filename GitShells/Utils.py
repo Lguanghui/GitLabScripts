@@ -90,6 +90,18 @@ def search_file_path(file_name: str) -> str:
     return ''
 
 
+def search_shell_file_path(file_name: str) -> str:
+    """
+    在脚本库目录下搜索指定文件，输出指定文件的路径
+    :param file_name: 指定文件名
+    :return: 指定文件路径
+    """
+    for root, _, files in os.walk(get_root_path()):
+        if file_name in files:
+            return os.path.join(root, file_name)
+    return ''
+
+
 class Colors:
     HEADER = '\033[95m'
     OK_BLUE = '\033[94m'
