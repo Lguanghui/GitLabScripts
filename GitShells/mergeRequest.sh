@@ -156,4 +156,5 @@ else
 
 fi
 
-repo_update_check.sh
+BASEDIR=$(dirname "$0")
+"$BASEDIR"/repo_update_check.sh
