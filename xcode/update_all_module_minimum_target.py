@@ -150,7 +150,6 @@ class Modifier:
             new_content = re.sub(rb"ios.deployment_target = [\'\"]([1-9]\d?(\.([1-9]?\d)))[\'\"]",
                                  b'ios.deployment_target = \'12.0\'',
                                  f.decode())
-            # new_content = f.decode().replace(b'11.0', b'12.0')
             f.content = new_content.decode('utf-8')  # 字节转字符串
             f.save(branch=FEATURE_BRANCH_NAME, commit_message='feature: 调整组件库最低支持版本至 iOS 12')
             return True

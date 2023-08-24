@@ -120,7 +120,7 @@ else
   merge_request=""
   git push \
     -o merge_request.create \
-    -o merge_request.target=$inputBranch \
+    -o merge_request.target="$inputBranch" \
     -o merge_request.title="$mergeRequestTitle" \
     --set-upstream origin "$username/mr$timestamp" \
     > mrLog.txt 2>&1

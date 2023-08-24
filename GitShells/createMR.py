@@ -354,6 +354,7 @@ class MRHelper:
                                                             author=str(self.last_commit.author),
                                                             message=mr_title.strip(),
                                                             repo_name=self.get_repo_name(self.repo),
+                                                            target_branch=mr_target_br,
                                                             config=self.config_model)
             else:
                 raise SystemExit('merge request 创建失败！')

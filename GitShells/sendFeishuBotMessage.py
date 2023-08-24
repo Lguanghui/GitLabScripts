@@ -25,6 +25,7 @@ def send_feishubot_message(merge_request_url: str,
                            author: str,
                            message: str,
                            repo_name: str,
+                           target_branch: str,
                            config: MergeRequestConfigModel) -> bool:
 
     answer = make_question('是否让机器人发送 merge request 通知 y/n(回车默认不发送): ', ['n', 'y'])
@@ -57,11 +58,14 @@ def send_feishubot_message(merge_request_url: str,
                                 {"tag": "text", "text": repo_name}]
         author_content: [dict] = [{"tag": "text", "text": "    - author: "},
                                   {"tag": "text", "text": author}]
+        branch_content: [dict] = [{"tag": "text", "text": "    - target branch: "},
+                                  {"tag": "text", "text": target_branch}]
         message_content: [dict] = [{"tag": "text", "text": "    - message: "},
                                    {"tag": "text", "text": message}]
 
         content.append(repo_content)
         content.append(author_content)
+        content.append(branch_content)
         content.append(message_content)
 
         content.append([{"tag": "a", "text": "点我查看 merge request", "href": merge_request_url}])
