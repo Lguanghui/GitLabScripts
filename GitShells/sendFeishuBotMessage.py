@@ -14,7 +14,6 @@
 
 import requests
 import json
-import configparser
 from Utils import Colors, debugPrint
 from makeQuestion import make_question
 from config_handler import MergeRequestConfigModel, FeishuUserInfo
@@ -27,7 +26,6 @@ def send_feishubot_message(merge_request_url: str,
                            repo_name: str,
                            target_branch: str,
                            config: MergeRequestConfigModel) -> bool:
-
     answer = make_question('是否让机器人发送 merge request 通知 y/n(回车默认不发送): ', ['n', 'y'])
     if answer == 'n':
         return False
@@ -44,41 +42,85 @@ def send_feishubot_message(merge_request_url: str,
     else:
         headers = {"Content-Type": "application/json"}
 
-        content: [[dict]] = []  # 注意，这里面的元素必须是数组，一个元素代表一个段落
-
-        desc_content: [dict] = []
+        at_str: str = ''
         if len(at_openids) > 0:
             for openid in at_openids:
-                desc_content.append({"tag": "at", "user_id": openid})
-        desc_content.append({"tag": "text", "text": " 您有一条 merge request 待处理🚀🚀🚀"})
-        content.append(desc_content)
+                at_str += f"<at id={ openid }></at>"
 
-        # content.append([{"tag": "text", "text": "commit 信息:"}])
-        repo_content: [dict] = [{"tag": "text", "text": "    - repo: "},
-                                {"tag": "text", "text": repo_name}]
-        author_content: [dict] = [{"tag": "text", "text": "    - author: "},
-                                  {"tag": "text", "text": author}]
-        branch_content: [dict] = [{"tag": "text", "text": "    - target branch: "},
-                                  {"tag": "text", "text": target_branch}]
-        message_content: [dict] = [{"tag": "text", "text": "    - message: "},
-                                   {"tag": "text", "text": message}]
-
-        content.append(repo_content)
-        content.append(author_content)
-        content.append(branch_content)
-        content.append(message_content)
-
-        content.append([{"tag": "a", "text": "点我查看 merge request", "href": merge_request_url}])
-
-        body = json.dumps({"msg_type": "post", "content": {
-            "post": {"zh_cn": {"title": "待处理 merge request 通知", "content": content}}}})
+        body = json.dumps({
+            "msg_type": "interactive",
+            "card": {
+                "elements": [{
+                    "tag": "div",
+                    "text": {
+                        "content": at_str + "您有一条 merge request 待处理🚀🚀🚀",
+                        "tag": "lark_md"
+                    }
+                },
+                    {
+                        "tag": "div",
+                        "fields": [
+                            {
+                                "is_short": True,
+                                "text": {
+                                    "tag": "lark_md",
+                                    "content": "**仓库名：**\n" + repo_name
+                                }
+                            },
+                            {
+                                "is_short": True,
+                                "text": {
+                                    "tag": "lark_md",
+                                    "content": "**作者：**\n" + author
+                                }
+                            },
+                            {
+                                "is_short": True,
+                                "text": {
+                                    "tag": "lark_md",
+                                    "content": "**合入分支：**\n" + target_branch
+                                }
+                            },
+                            {
+                                "is_short": True,
+                                "text": {
+                                    "tag": "lark_md",
+                                    "content": "**提交信息：**\n" + message
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "tag": "hr"
+                    }, {
+                        "actions": [{
+                            "tag": "button",
+                            "text": {
+                                "content": "点我查看 merge request :玫瑰:",
+                                "tag": "lark_md"
+                            },
+                            "url": merge_request_url,
+                            "type": "primary",
+                            "value": {}
+                        }],
+                        "tag": "action"
+                    }],
+                "header": {
+                    "title": {
+                        "content": "待处理 merge request 通知",
+                        "tag": "plain_text"
+                    }
+                }
+            }
+        })
         # debugPrint(body)
         response = requests.request("POST", config.feishu_bot_webhook, headers=headers, data=body)
         debugPrint('status code: ', response.status_code)
-        if response.status_code == 200 or response.status_code == 0:
+        if response.status_code == 200:
             print('机器人通知发送成功！🎉')
             return True
         else:
+            print('机器人通知发送失败！☹️')
             return False
 
 
@@ -116,13 +158,11 @@ def pick_at_userid(user_infos: [FeishuUserInfo]) -> [str]:
 
 
 if __name__ == '__main__':
-    # send_feishubot_message(merge_request_url='https://www.baidu.com', author='xiaoliang', message='message')
-    _config = configparser.ConfigParser()
-    _config.read('./MRConfig.ini')
-    _section = _config[_config.sections()[0]]
-    dict_data = _section.get("feishu_user_infos")
-    print(type(dict_data))
-    dict_data = eval(dict_data)
-    print(type(dict_data))
-    print(dict_data)
-    print(type(dict_data[0]['default_selected']))
+    import config_handler
+
+    send_feishubot_message(merge_request_url='https://www.baidu.com',
+                           author='xiaoliang',
+                           message='feature: 腿部动作能力测评腿部动作能力测评腿部动作能力测评腿部动作能力测评腿部动作能力测评',
+                           target_branch="master",
+                           config=config_handler.get_config_model(),
+                           repo_name="Keep")
