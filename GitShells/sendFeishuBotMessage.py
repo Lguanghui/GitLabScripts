@@ -104,7 +104,17 @@ def send_feishubot_message(merge_request_url: str,
                             "value": {}
                         }],
                         "tag": "action"
-                    }],
+                    },
+                    {
+                        "tag": "note",
+                        "elements": [
+                            {
+                                "tag": "plain_text",
+                                "content": "📟 Powered by KEPShellScripts"
+                            }
+                        ]
+                    }
+                ],
                 "header": {
                     "template": "blue",
                     "title": {
