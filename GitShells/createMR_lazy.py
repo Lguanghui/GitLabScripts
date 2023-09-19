@@ -145,7 +145,7 @@ def commit_podfile_changes(helper: MRHelper, messages: [str]):
         if message != custom_message:
             commit_message = message
     if len(commit_message) == 0:
-        commit_message = make_question('请输入提交:')
+        commit_message = make_question('请输入提交信息:')
         debugPrint("你输入了", commit_message)
 
     debugPrint("commit message:", commit_message)

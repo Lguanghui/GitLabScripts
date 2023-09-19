@@ -64,28 +64,28 @@ def send_feishubot_message(merge_request_url: str,
                                 "is_short": True,
                                 "text": {
                                     "tag": "lark_md",
-                                    "content": "**仓库名：**\n" + repo_name
+                                    "content": "🛖 **仓库名：**\n" + repo_name
                                 }
                             },
                             {
                                 "is_short": True,
                                 "text": {
                                     "tag": "lark_md",
-                                    "content": "**作者：**\n" + author
+                                    "content": "🧑🏻‍💻 **作者：**\n" + author
                                 }
                             },
                             {
                                 "is_short": True,
                                 "text": {
                                     "tag": "lark_md",
-                                    "content": "**合入分支：**\n" + target_branch
+                                    "content": "🛠️ **合入分支：**\n" + target_branch
                                 }
                             },
                             {
                                 "is_short": True,
                                 "text": {
                                     "tag": "lark_md",
-                                    "content": "**提交信息：**\n" + message
+                                    "content": "✏️ **提交信息：**\n" + message
                                 }
                             }
                         ]
@@ -106,8 +106,9 @@ def send_feishubot_message(merge_request_url: str,
                         "tag": "action"
                     }],
                 "header": {
+                    "template": "blue",
                     "title": {
-                        "content": "待处理 merge request 通知",
+                        "content": "🔥 待处理 merge request 通知",
                         "tag": "plain_text"
                     }
                 }
