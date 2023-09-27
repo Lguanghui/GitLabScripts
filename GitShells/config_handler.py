@@ -42,6 +42,7 @@ class MergeRequestConfigModel:
     feishu_bot_webhook: str
     send_feishubot_message: bool
     feishu_user_infos: list[FeishuUserInfo] = field(default_factory=list)
+    self_open_id: str = field(default_factory=str)
 
 
 def get_config_model() -> MergeRequestConfigModel:
@@ -52,6 +53,12 @@ def get_config_model() -> MergeRequestConfigModel:
     with open(file_path) as f:
         data = json.load(f)
         model = from_dict(MergeRequestConfigModel, data)
+
+        if len(model.self_open_id) == 0:
+            print('\r\033[K')
+            raise SystemExit('⚠️ config.json -> self_open_id 未配置。请将 self_open_id 设置为自己的飞书 openid。可以参考 '
+                             'config_example.json')
+
         return model
     # parser = Parser()
     # parser.read(get_root_path() + '/MRConfig.ini')

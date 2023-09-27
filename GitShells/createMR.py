@@ -159,6 +159,54 @@ class MRHelper:
     def check_has_uncommitted_changes(self) -> bool:
         return self.repo.is_dirty(untracked_files=True)
 
+    def addLabel(self, mr: ProjectMergeRequest, webhookUrl: str, open_id: str):
+        """
+        给 merge request 添加 label
+        :param open_id: feishu id
+        :param mr: merge request
+        :param webhookUrl: 机器人 webhook
+        :return:
+        """
+
+        if len(webhookUrl) == 0 or len(open_id) == 0:
+            debugPrint("webhookUrl 或者 open_id 为空，不添加 label")
+            return
+
+        debugPrint("开始添加 label")
+        labels = self.current_proj.labels.list()
+        debugPrint(labels)
+
+        # webhook
+        webhook_labels = list(filter(lambda x: (x.name is not None) and x.name.startswith("webhook-"), labels))
+        found: bool = False
+        for label in webhook_labels:
+            if label.description == webhookUrl:
+                mr.labels.append(label.name)
+                debugPrint("从已有 label 中找到合适的 webhook label")
+                found = True
+        if not found:
+            debugPrint("创建新的 webhook label")
+            label_name = 'webhook-' + str(len(webhook_labels))
+            self.current_proj.labels.create({'name': label_name, 'description': webhookUrl, 'color': '#8899aa'})
+            mr.labels.append(label_name)
+        mr.save()
+
+        # openid
+        openid_labels = list(filter(lambda x: (x.name is not None) and x.name.startswith("id-"), labels))
+        found_id = False
+        for label in openid_labels:
+            if label.description == open_id:
+                debugPrint("从已有 label 中找到合适的 id label")
+                mr.labels.append(label.name)
+                found_id = True
+        if not found_id:
+            debugPrint("创建新的 id label")
+            label_name = 'id-' + str(len(openid_labels))
+            self.current_proj.labels.create({'name': label_name, 'description': open_id, 'color': '#8899aa'})
+            mr.labels.append(label_name)
+
+        mr.save()
+
     def create_merge_request(self):
         if self.check_has_uncommitted_changes():
             raise SystemExit('⚠️ 有未提交的更改！')
@@ -299,6 +347,9 @@ class MRHelper:
                     merge_request: ProjectMergeRequest = self.current_proj.mergerequests.get(mr_info_from_local.id)
                     debugPrint(f"从本地 log 中拿到 url: {merge_request.web_url}, id: {mr_info_from_local.id}")
                     merge_request.description = description
+                    self.addLabel(merge_request,
+                                  self.config_model.feishu_bot_webhook,
+                                  open_id=self.config_model.self_open_id)
                     merge_request.save()
                 except Exception as err:
                     debugPrint(err)
@@ -311,10 +362,13 @@ class MRHelper:
                                                                        order_by='updated_at',
                                                                        get_all=True)
                         for mr in mr_list:
+                            mr: ProjectMergeRequest = mr
                             debugPrint(f"比对 merge request: {str(mr.web_url)}")
                             if merge_request_url == str(mr.web_url):
                                 debugPrint("merge request 比对成功，修改 description")
                                 mr.description = description
+                                self.addLabel(mr, self.config_model.feishu_bot_webhook,
+                                              open_id=self.config_model.self_open_id)
                                 mr.save()
                                 found = True
                                 break
@@ -330,6 +384,8 @@ class MRHelper:
                         if self.last_commit.hexsha in commit_list:
                             merge_request_url = mr.web_url
                             mr.description = description
+                            self.addLabel(mr, self.config_model.feishu_bot_webhook,
+                                          open_id=self.config_model.self_open_id)
                             mr.save()
                             break
                     time.sleep(1)
@@ -413,6 +469,7 @@ if __name__ == '__main__':
         debugPrint('当前是 DEBUG 模式')
     if '--lazy' in args:
         from Utils import Colors
+
         print(Colors.CBOLD + Colors.CGREEN + "当前是懒人模式，自动检测并更新组件库最新 commit（7 天内）" + Colors.ENDC)
         lazy_mode = True
 
@@ -429,6 +486,7 @@ if __name__ == '__main__':
     LoadingAnimation.sharedInstance.finished = True
     if lazy_mode:
         from createMR_lazy import do_lazy_create
+
         do_lazy_create(helper)
     else:
         helper.create_merge_request()

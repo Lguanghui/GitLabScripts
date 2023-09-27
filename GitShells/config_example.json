@@ -1,6 +1,7 @@
 {
   "send_feishubot_message": true,
   "feishu_bot_webhook": "xxx",
+  "self_open_id": "xxx",
   "feishu_user_infos": [
     {
       "name": "小明",
