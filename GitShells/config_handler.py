@@ -57,7 +57,7 @@ def get_config_model() -> MergeRequestConfigModel:
         if len(model.self_open_id) == 0:
             print('\r\033[K')
             raise SystemExit('⚠️ config.json -> self_open_id 未配置。请将 self_open_id 设置为自己的飞书 openid。可以参考 '
-                             'config_example.json')
+                             'config_example.json，获取飞书 openid 的方法可以参考 https://www.cnblogs.com/mxcl/p/16359730.html')
 
         return model
     # parser = Parser()
