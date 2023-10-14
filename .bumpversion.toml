@@ -1,0 +1,9 @@
+[tool.bumpversion]
+current_version = "1.0.1"
+commit = true
+tag = true
+
+# [[tool.bumpversion.files]]
+# filename = "requirements.txt"
+# search = "MyProject=={current_version}"
+# replace = "MyProject=={new_version}"
