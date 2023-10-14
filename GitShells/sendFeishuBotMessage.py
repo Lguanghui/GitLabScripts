@@ -18,6 +18,7 @@ from Utils import Colors, debugPrint
 from makeQuestion import make_question
 from config_handler import MergeRequestConfigModel, FeishuUserInfo
 import pick
+from create_request import post_merge_request_create
 
 
 def send_feishubot_message(merge_request_url: str,
@@ -127,6 +128,13 @@ def send_feishubot_message(merge_request_url: str,
         # debugPrint(body)
         response = requests.request("POST", config.feishu_bot_webhook, headers=headers, data=body)
         debugPrint('status code: ', response.status_code)
+
+        post_merge_request_create(merge_request_url=merge_request_url,
+                                  bot_message_at_ids=at_openids,
+                                  personal_openid=config.self_open_id,
+                                  bot_webhook_url=config.feishu_bot_webhook,
+                                  author=author)
+
         if response.status_code == 200:
             print('机器人通知发送成功！🎉')
             return True
