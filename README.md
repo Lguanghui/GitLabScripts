@@ -4,9 +4,25 @@
 
 [👉 mergeRequest](https://gitlab.com/Lguanghui/ShellScripts#mergerequest-%E8%84%9A%E6%9C%AC)
 
-`createMR.sh` 是功能比较完善的脚本，支持处理 Podfile 的改动，建议作为主力使用。
+[👉 Xcode 相关脚本](#xcode)
 
-`mergeRequest.sh` 是初级脚本，不会处理 Podfile 的改动，但速度比较快，建议仅在组件库内生成 merge request 时使用。
+`createMR.sh` 是功能比较完善的脚本，内部使用 python 语言，支持处理 Podfile 的改动，建议作为主力使用。
+
+`mergeRequest.sh` 是快速创建 merge request 的脚本，内部使用 Shell 语言。不会处理 Podfile 的改动，但速度比较快，建议仅在组件库内生成 merge request 时使用
+
+## Features
+
+- [x] 一键创建 merge request
+- [x] 根据 Podfile 改动，在 merge request 中携带相应组件库的 merge request 或者 commit
+- [x] 创建 merge request 之后，向飞书群发送提醒消息
+- [x] merge request 合并后，向飞书群发送提醒消息
+- [x] merge request 超时未合并，定时向飞书群发送提醒消息
+
+![opened_mr](images/merge_request_opened.png)
+
+![merged_mr](images/merge_request_merged.png)
+
+![remind_mr](images/merge_request_remind.png)
 
 ## createMR 脚本
 
@@ -151,3 +167,17 @@ mergeRequest.sh
 6. 将缓存分支 push 到 remote。push 的时候携带了创建 MR 需要的一些信息
 7. 将分支切回本地的源分支，并删掉缓存分支
 8. 输出 MR 链接
+
+## Xcode
+
+<span id="xcode">Xcode 相关的脚本</span>
+
+### update_all_module_minimum_target
+
+一键修改 Gitlab 所有 iOS 仓库（包含主工程和组件库）支持的最低系统版本：
+
+- 修改 Podfile 中的 `platform :ios, xx.x`
+- 修改 podspec 文件中的 `ios.deployment_target`
+- 修改 xcodeproj 文件夹中 pbxproj 类型的文件，正则匹配 `IPHONEOS_DEPLOYMENT_TARGET`
+
+所有修改在线上进行，不需要本地 clone 仓库。默认在子分支进行修改，修改完成后生成并打印 merge request 链接。

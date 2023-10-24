@@ -25,7 +25,7 @@ def post_merge_request_create(merge_request_url: str,
                               ):
     headers = {"Content-Type": "application/json"}
     iid: str = merge_request_url.split("/")[-1]
-    body = json.dumps({"merge_request_url": merge_request_url,
+    body = json.dumps({"url": merge_request_url,
                        "iid": iid,
                        "bot_message_at_ids": bot_message_at_ids,
                        "personal_openid": personal_openid,
