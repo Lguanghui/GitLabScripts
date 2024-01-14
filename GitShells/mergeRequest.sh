@@ -70,6 +70,7 @@ username=$(whoami)
 
 echoOrange "开始创建 merge request"
 
+# shellcheck disable=SC2006
 if [[ `git status --porcelain` ]]; then
 #  find uncommitted Changes
   echoRed "\033[31m发现有未提交的更改\033[0m"
@@ -111,18 +112,18 @@ else
   sourceBranch=$(git branch | sed -n -e 's/^\* \(.*\)/\1/p')
   echoBlue "源分支名字为 $sourceBranch"
 
-# creat cache branch
-  echoBlue "正在创建并切换到临时分支"
-  git checkout -b "$username/mr$timestamp" > /dev/null 2>&1
+# pull
+  echoBlue "正在从远端拉取最新代码"
+  git pull -r > /dev/null 2>&1
 
 #  push
-  echoBlue "正在将临时分支推到远端"
+  echoBlue "正在将分支推到远端"
   merge_request=""
   git push \
     -o merge_request.create \
     -o merge_request.target="$inputBranch" \
     -o merge_request.title="$mergeRequestTitle" \
-    --set-upstream origin "$username/mr$timestamp" \
+    --set-upstream origin "$sourceBranch" \
     > mrLog.txt 2>&1
 
 # find merge request from output
@@ -136,14 +137,6 @@ else
 
 # delete log file
   rm -rf mrLog.txt
-
-# switch to source branch
-  echoBlue "正在切换到源分支"
-  git checkout "$sourceBranch" > /dev/null 2>&1
-
-# delete cache branch
-  echoBlue "正在删除本地临时分支"
-  git branch -d "$username/mr$timestamp" > /dev/null 2>&1
 
 # output
   if [ -z "$merge_request" ]; then
