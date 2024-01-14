@@ -91,7 +91,7 @@ else
     echoOrange "输入目标分支名字 (默认为 master): "
     read -r inputBranch
     if [ -z "$inputBranch" ]; then
-        inputBranch="master"
+        inputBranch="$(git remote show origin | sed -n '/HEAD branch/s/.*: //p')"
     fi
   else
   # get targetBranch from args
