@@ -115,14 +115,16 @@ else
 # pull
   echoBlue "正在从远端拉取最新代码"
   git fetch -p
-  git pull -r > /dev/null 2>&1
+# pull if has a remote branch with the same name
+  if [[ `git ls-remote --exit-code --heads origin refs/heads/"$sourceBranch"` ]]; then
+        git pull -r > /dev/null 2>&1
+  fi
 
 if [[ `git diff --quiet origin/"$sourceBranch"` ]]; then
-#  find uncommitted Changes
-  echoGreen "本地分支和远端分支有差异，正常创建 Merge Request"
-else
   echoRed "本地分支和远端分支没有差异，准备创建一个空的 Commit"
   git commit --allow-empty -m "Empty-Commit-for-Merge-Request" > /dev/null 2>&1
+else
+  echoGreen "本地分支和远端分支有差异，正常创建 Merge Request"
 fi
 
 #  push
