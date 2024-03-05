@@ -32,7 +32,7 @@ def post_merge_request_create(merge_request_url: str,
                        "bot_webhook_url": bot_webhook_url,
                        "author": author
                        })
-    response = requests.request("POST", "http://68.183.233.56:8080/merge-request/create", headers=headers, data=body)
+    response = requests.request("POST", "http://api.liangguanghui.site/merge-request/create", headers=headers, data=body)
     debugPrint('向服务器发送创建请求，status code: ', response.status_code)
 
 
